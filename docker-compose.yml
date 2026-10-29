@@ -1,0 +1,49 @@
+services:
+  # Banco de dados do MS1 - Usuários
+  users-db:
+    image: postgres:17
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: ${USERS_DB_NAME}
+      POSTGRES_USER: ${USERS_DB_USER}
+      POSTGRES_PASSWORD: ${USERS_DB_PASSWORD}
+
+    ports:
+      - "127.0.0.1:5433:5432"
+
+    volumes:
+      - users_data:/var/lib/postgresql/data
+
+    networks:
+      - users-network
+
+  # Banco de dados do MS2 - Transações
+  transactions-db:
+    image: postgres:17
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: ${TRANSACTIONS_DB_NAME}
+      POSTGRES_USER: ${TRANSACTIONS_DB_USER}
+      POSTGRES_PASSWORD: ${TRANSACTIONS_DB_PASSWORD}
+
+    ports:
+      - "127.0.0.1:5434:5432"
+
+    volumes:
+      - transactions_data:/var/lib/postgresql/data
+
+    networks:
+      - transactions-network
+
+volumes:
+  users_data:
+  transactions_data:
+
+networks:
+  users-network:
+    driver: bridge
+
+  transactions-network:
+    driver: bridge
