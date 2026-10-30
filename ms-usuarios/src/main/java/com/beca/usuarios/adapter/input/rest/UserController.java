@@ -60,4 +60,15 @@ public class UserController {
 
         return ResponseEntity.ok(response);
     }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<UserResponseDTO> update(
+            @PathVariable Long id,
+            @Valid @RequestBody UserRequestDTO request){
+
+        User user = userMapper.toDomain(request, passwordEncoder);
+        User updatedUser = userUseCase.update(id, user);
+
+        return ResponseEntity.ok(userMapper.toResponse(updatedUser));
+    }
 }
