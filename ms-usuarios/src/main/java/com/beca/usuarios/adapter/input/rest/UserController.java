@@ -1,5 +1,7 @@
 package com.beca.usuarios.adapter.input.rest;
 
+import com.beca.usuarios.adapter.input.csv.UserCsvImporter;
+import com.beca.usuarios.adapter.input.rest.dto.UserImportResponseDTO;
 import com.beca.usuarios.adapter.input.rest.dto.UserRequestDTO;
 import com.beca.usuarios.adapter.input.rest.dto.UserResponseDTO;
 import com.beca.usuarios.core.usuario.model.User;
@@ -10,7 +12,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,11 +26,13 @@ public class UserController {
     private final UserUseCase userUseCase;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+    private final UserCsvImporter userCsvImporter;
 
-    public UserController(UserUseCase userUseCase, UserMapper userMapper, PasswordEncoder passwordEncoder) {
+    public UserController(UserUseCase userUseCase, UserMapper userMapper, PasswordEncoder passwordEncoder, UserCsvImporter userCsvImporter) {
         this.userUseCase = userUseCase;
         this.userMapper = userMapper;
         this.passwordEncoder = passwordEncoder;
+        this.userCsvImporter = userCsvImporter;
     }
 
     @PostMapping
@@ -77,5 +84,18 @@ public class UserController {
         userUseCase.deleteById(id);
 
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping(value = "/import", consumes = "multipart/form-data")
+    public ResponseEntity<UserImportResponseDTO> importUsers(
+            @RequestParam("file")MultipartFile file) throws IOException{
+        if(file.isEmpty()){
+            throw new IllegalArgumentException("CSV file is empty");
+        }
+
+        UserImportResponseDTO response =
+                userCsvImporter.read(file.getInputStream());
+
+        return ResponseEntity.ok(response);
     }
 }

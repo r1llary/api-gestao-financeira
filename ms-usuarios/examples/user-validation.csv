@@ -1,0 +1,3 @@
+name,email,password
+Invalid User,invalid-email,Example123
+User Three,user.three@example.com,Example4789
