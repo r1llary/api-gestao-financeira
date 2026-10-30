@@ -9,10 +9,10 @@ public class User {
     public User(Long id, String name, String email, String passwordHash) {
 
         if (name == null || name.isBlank()){
-            throw new IllegalArgumentException("O nome é obrigatório!");
+            throw new IllegalArgumentException("Name is required!");
         }
         if (email == null || email.isBlank()){
-            throw new IllegalArgumentException("O e-mail é obrigatório!");
+            throw new IllegalArgumentException("E-mail is required!");
         }
         if (passwordHash == null || passwordHash.isBlank()){
             throw new IllegalArgumentException("A credecial do usuário é obrigatória!");

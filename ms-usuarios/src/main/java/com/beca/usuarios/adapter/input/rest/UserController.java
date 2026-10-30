@@ -8,11 +8,11 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
+import java.util.ArrayList;
+import java.util.List;
 
 @RestController
 @RequestMapping("/users")
@@ -38,5 +38,26 @@ public class UserController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(userMapper.toResponse(createdUser));
+    }
+
+    @GetMapping
+    public ResponseEntity<List <UserResponseDTO>> findAll(){
+        List<User> users = userUseCase.findAll();
+
+        List<UserResponseDTO> response = new ArrayList<>();
+
+        for (User user : users){
+            response.add(userMapper.toResponse(user));
+        }
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<UserResponseDTO> findById(@PathVariable Long id){
+        User user = userUseCase.findById(id);
+
+        UserResponseDTO response = userMapper.toResponse(user);
+
+        return ResponseEntity.ok(response);
     }
 }

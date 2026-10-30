@@ -4,6 +4,7 @@ import com.beca.usuarios.core.usuario.model.User;
 
 import java.util.List;
 
+// Define quais funcionalidades o sistema oferece
 public interface UserUseCase {
 
     User create(User user);
