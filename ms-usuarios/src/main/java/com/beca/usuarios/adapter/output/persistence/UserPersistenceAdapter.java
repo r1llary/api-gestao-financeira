@@ -4,6 +4,7 @@ import com.beca.usuarios.core.usuario.model.User;
 import com.beca.usuarios.core.usuario.port.output.UserRepositoryPort;
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,6 +17,7 @@ public class UserPersistenceAdapter implements UserRepositoryPort {
         this.jpaRepository=jpaRepository;
     }
 
+    @Override
     public User save(User user){
         UserEntity entity = new UserEntity(
                 user.getId(),
@@ -29,10 +31,14 @@ public class UserPersistenceAdapter implements UserRepositoryPort {
 
     @Override
     public List<User> findAll(){
-        return jpaRepository.findAll()
-                .stream()
-                .map(this::toDomain)
-                .toList();
+        List<UserEntity> entities = jpaRepository.findAll();
+         List<User> users = new ArrayList<>();
+
+         for (UserEntity entity: entities){
+             User user = toDomain(entity);
+             users.add(user);
+         }
+         return users;
     }
 
     @Override
@@ -46,9 +52,11 @@ public class UserPersistenceAdapter implements UserRepositoryPort {
         return jpaRepository.existsByEmail(email);
     }
 
+    @Override
     public void deleteById(Long id){
         jpaRepository.deleteById(id);
     }
+
 
     private User toDomain(UserEntity entity){
         return new User(
