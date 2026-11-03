@@ -6,6 +6,7 @@ import com.beca.usuarios.core.usuario.model.User;
 import com.beca.usuarios.core.usuario.port.output.UserRepositoryPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.jpa.domain.PredicateSpecification;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -205,6 +206,29 @@ class UserServiceTest {
 
         // Assert
         assertEquals("Email already registered", exception.getMessage());
+        verify(repository, never()).save(any(User.class));
+    }
+
+    @Test
+    void shouldRejectDuplicateEmailAfterNormalization(){
+        User user = new User(
+                null,
+                "Ana",
+                " ANA@EXAMPLE.COM ",
+                "test-password"
+        );
+
+        when(repository.existsByEmail("ana@example.com"))
+                .thenReturn(true);
+
+        assertEquals("ana@example.com", user.getEmail());
+
+        assertThrows(
+                EmailAlreadyExistsException.class,
+                () -> service.create(user)
+        );
+
+        verify(repository).existsByEmail("ana@example.com");
         verify(repository, never()).save(any(User.class));
     }
 }
