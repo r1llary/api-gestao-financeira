@@ -231,4 +231,43 @@ class UserServiceTest {
         verify(repository).existsByEmail("ana@example.com");
         verify(repository, never()).save(any(User.class));
     }
+
+    @Test
+    void shouldUpdateUserSuccessfully() {
+        // Arrange
+        User existingUser = new User(
+                1L,
+                "Ana",
+                "ana@example.com",
+                "old-password-hash"
+        );
+
+        User requestedUser = new User(
+                null,
+                "Ana Atualizada",
+                "novo@example.com",
+                "new-password-hash"
+        );
+
+        when(repository.findById(1L))
+                .thenReturn(Optional.of(existingUser));
+
+        when(repository.existsByEmail("novo@example.com"))
+                .thenReturn(false);
+
+        when(repository.save(any(User.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        // Act
+        User result = service.update(1L, requestedUser);
+
+        // Assert
+        assertEquals(1L, result.getId());
+        assertEquals("Ana Atualizada", result.getName());
+        assertEquals("novo@example.com", result.getEmail());
+        assertEquals("new-password-hash", result.getPasswordHash());
+
+        verify(repository).existsByEmail("novo@example.com");
+        verify(repository).save(result);
+    }
 }
