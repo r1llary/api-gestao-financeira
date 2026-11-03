@@ -2,16 +2,17 @@ package com.beca.usuarios.adapter.input.csv;
 
 import com.beca.usuarios.adapter.input.rest.dto.UserImportResponseDTO;
 import com.beca.usuarios.adapter.input.rest.dto.UserRequestDTO;
+import com.beca.usuarios.core.usuario.exception.EmailAlreadyExistsException;
 import com.beca.usuarios.core.usuario.model.User;
 import com.beca.usuarios.core.usuario.port.input.UserUseCase;
 import jakarta.validation.Validator;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVRecord;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -29,64 +30,92 @@ public class UserCsvImporter {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public UserImportResponseDTO read(InputStream input) throws IOException{
-
+    public UserImportResponseDTO read(InputStream input) throws IOException {
         int imported = 0;
         List<String> errors = new ArrayList<>();
-        try(BufferedReader reader = new BufferedReader(new InputStreamReader(input, StandardCharsets.UTF_8))){
 
-            String header = reader.readLine();
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(input, StandardCharsets.UTF_8))) {
 
-            if (!"name,email,password".equals(header)){
-                throw new IllegalArgumentException(
-                        "Invalid CSV header. Expected: name,email,password"
-                );
+            // Remove o BOM apenas se ele estiver no início do arquivo.
+            reader.mark(1);
+
+            if (reader.read() != '\uFEFF') {
+                reader.reset();
             }
 
-            String line = reader.readLine();
-            int lineNumber = 2;
-
-            while (line != null){
+            try (CSVParser parser = CSVFormat.RFC4180.parse(reader)) {
+                List<CSVRecord> records;
 
                 try {
-                    String[] fields = line.split(",", -1);
-
-                if (fields.length != 3){
+                    records = parser.getRecords();
+                } catch (UncheckedIOException exception) {
                     throw new IllegalArgumentException(
-                            "Invalid CSV format at line " + lineNumber
+                            "Invalid CSV file: could not read CSV records",
+                            exception
                     );
                 }
 
-                String name = fields[0];
-                String email = fields[1];
-                String password = fields[2];
+                if (records.isEmpty()) {
+                    throw new IllegalArgumentException("CSV file is empty");
+                }
 
-                UserRequestDTO request = new UserRequestDTO(name, email, password);
+                CSVRecord header = records.get(0);
 
-                if(!validator.validate(request).isEmpty()){
+                if (header.size() != 3
+                        || !"name".equals(header.get(0))
+                        || !"email".equals(header.get(1))
+                        || !"password".equals(header.get(2))) {
+
                     throw new IllegalArgumentException(
-                            "Invalid user dataat line " + lineNumber
+                            "Invalid CSV header. Expected: name,email,password"
                     );
                 }
 
-                User user = new User(
-                        null,
-                        request.name(),
-                        request.email(),
-                        passwordEncoder.encode(request.password())
-                );
+                for (int index = 1; index < records.size(); index++) {
+                    CSVRecord record = records.get(index);
 
-                userUseCase.create(user);
-                imported++;
+                    try {
+                        if (record.size() != 3) {
+                            throw new IllegalArgumentException(
+                                    "Expected 3 fields"
+                            );
+                        }
 
-                } catch (IllegalArgumentException e){
-                    errors.add("Line " + lineNumber + ": " + e.getMessage());
+                        UserRequestDTO request = new UserRequestDTO(
+                                record.get(0),
+                                record.get(1),
+                                record.get(2)
+                        );
+
+                        if (!validator.validate(request).isEmpty()) {
+                            throw new IllegalArgumentException(
+                                    "Invalid user data"
+                            );
+                        }
+
+                        User user = new User(
+                                null,
+                                request.name(),
+                                request.email(),
+                                passwordEncoder.encode(request.password())
+                        );
+
+                        userUseCase.create(user);
+                        imported++;
+
+                    } catch (IllegalArgumentException
+                             | EmailAlreadyExistsException exception) {
+
+                        errors.add(
+                                "Record " + record.getRecordNumber()
+                                        + ": " + exception.getMessage()
+                        );
+                    }
                 }
-
-                line = reader.readLine();
-                lineNumber++;
             }
         }
+
         return new UserImportResponseDTO(imported, errors.size(), errors);
     }
 }
