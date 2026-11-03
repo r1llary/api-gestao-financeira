@@ -1,5 +1,6 @@
 package com.beca.usuarios.core.usuario.service;
 
+import com.beca.usuarios.core.usuario.exception.EmailAlreadyExistsException;
 import com.beca.usuarios.core.usuario.model.User;
 import com.beca.usuarios.core.usuario.port.output.UserRepositoryPort;
 import org.junit.jupiter.api.BeforeEach;
@@ -36,8 +37,8 @@ class UserServiceTest {
                 .thenReturn(true);
 
         //Act
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
+        EmailAlreadyExistsException exception = assertThrows(
+                EmailAlreadyExistsException.class,
                 () -> service.create(user)
         );
 
@@ -196,8 +197,8 @@ class UserServiceTest {
         when(repository.existsByEmail("other@example.com"))
                 .thenReturn(true);
 
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
+        EmailAlreadyExistsException exception = assertThrows(
+                EmailAlreadyExistsException.class,
                 () -> service.update(1L, updatedUser)
         );
 

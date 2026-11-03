@@ -1,5 +1,6 @@
 package com.beca.usuarios.core.usuario.service;
 
+import com.beca.usuarios.core.usuario.exception.EmailAlreadyExistsException;
 import com.beca.usuarios.core.usuario.model.User;
 import com.beca.usuarios.core.usuario.port.input.UserUseCase;
 import com.beca.usuarios.core.usuario.port.output.UserRepositoryPort;
@@ -18,7 +19,7 @@ public class UserService implements UserUseCase {
     @Override
     public User create(User user){
         if (respository.existsByEmail(user.getEmail())) {
-            throw new IllegalArgumentException("Email already registered");
+            throw new EmailAlreadyExistsException();
         }
         return respository.save(user);
     }
@@ -41,7 +42,7 @@ public class UserService implements UserUseCase {
 
         if (!existingUser.getEmail().equalsIgnoreCase(user.getEmail())
             && respository.existsByEmail(user.getEmail())){
-            throw new IllegalArgumentException("Email already registered");
+            throw new EmailAlreadyExistsException();
         }
 
         User updatedUser = new User(

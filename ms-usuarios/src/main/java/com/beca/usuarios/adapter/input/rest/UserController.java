@@ -50,6 +50,14 @@ public class UserController {
     )
     @Operation(summary = "Create a user")
     @ApiResponse(responseCode = "201", description =  "User created")
+    @ApiResponse(
+            responseCode = "409",
+            description = "Email already registered",
+            content = @Content(
+                    mediaType = "text/plain",
+                    schema = @Schema(implementation = String.class)
+            )
+    )
     @PostMapping
     public ResponseEntity<UserResponseDTO> create(
             @Valid @RequestBody UserRequestDTO request
@@ -127,6 +135,14 @@ public class UserController {
     )
     @Operation(summary = "Update a user")
     @SecurityRequirement(name = "basicAuth")
+    @ApiResponse(
+            responseCode = "409",
+            description = "Email already registered",
+            content = @Content(
+                    mediaType = "text/plain",
+                    schema = @Schema(implementation = String.class)
+            )
+    )
     @PutMapping("/{id}")
     public ResponseEntity<UserResponseDTO> update(
             @PathVariable Long id,

@@ -1,9 +1,9 @@
 package com.beca.usuarios.adapter.input.rest.exception;
 
+import com.beca.usuarios.core.usuario.exception.EmailAlreadyExistsException;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import org.apache.coyote.Response;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -62,5 +62,21 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(400)
                 .body(exception.getMessage());
+    }
+
+    @ApiResponse(
+            responseCode = "409",
+            description = "Emailalready registered",
+            content = @Content(
+                    mediaType = "text/plain",
+                    schema = @Schema(implementation = String.class)
+            )
+    )
+    @ExceptionHandler(EmailAlreadyExistsException.class)
+    public ResponseEntity<String> handlerEmailAlreadyExists(
+            EmailAlreadyExistsException exception){
+    return ResponseEntity
+            .status(409)
+            .body(exception.getMessage());
     }
 }
