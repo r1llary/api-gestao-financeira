@@ -6,6 +6,11 @@ import com.beca.usuarios.adapter.input.rest.dto.UserRequestDTO;
 import com.beca.usuarios.adapter.input.rest.dto.UserResponseDTO;
 import com.beca.usuarios.core.usuario.model.User;
 import com.beca.usuarios.core.usuario.port.input.UserUseCase;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -35,6 +40,16 @@ public class UserController {
         this.userCsvImporter = userCsvImporter;
     }
 
+    @ApiResponse(
+            responseCode = "400",
+            description = "Invalid request data",
+            content = @Content(
+                    mediaType = "text/plain",
+                    schema = @Schema(implementation = String.class)
+            )
+    )
+    @Operation(summary = "Create a user")
+    @ApiResponse(responseCode = "201", description =  "User created")
     @PostMapping
     public ResponseEntity<UserResponseDTO> create(
             @Valid @RequestBody UserRequestDTO request
@@ -47,6 +62,13 @@ public class UserController {
                 .body(userMapper.toResponse(createdUser));
     }
 
+    @ApiResponse(
+            responseCode = "200",
+            description = "Operation completed successfully",
+            useReturnTypeSchema = true
+    )
+    @Operation(summary = "List all users")
+    @SecurityRequirement(name = "basicAuth")
     @GetMapping
     public ResponseEntity<List <UserResponseDTO>> findAll(){
         List<User> users = userUseCase.findAll();
@@ -59,6 +81,21 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
+    @ApiResponse(
+            responseCode = "200",
+            description = "Operation completed successfully",
+            useReturnTypeSchema = true
+    )
+    @ApiResponse(
+            responseCode = "404",
+            description = "User Not Found",
+            content = @Content(
+                    mediaType = "text/plain",
+                    schema = @Schema(implementation = String.class)
+            )
+    )
+    @Operation(summary = "Find a user by ID")
+    @SecurityRequirement(name = "basicAuth")
     @GetMapping("/{id}")
     public ResponseEntity<UserResponseDTO> findById(@PathVariable Long id){
         User user = userUseCase.findById(id);
@@ -68,6 +105,24 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
+    @ApiResponse(
+            responseCode = "404",
+            description = "User Not Found",
+            content = @Content(
+                    mediaType = "text/plain",
+                    schema = @Schema(implementation = String.class)
+            )
+    )
+    @ApiResponse(
+            responseCode = "400",
+            description = "Invalid request data",
+            content = @Content(
+                    mediaType = "text/plain",
+                    schema = @Schema(implementation = String.class)
+            )
+    )
+    @Operation(summary = "Update a user")
+    @SecurityRequirement(name = "basicAuth")
     @PutMapping("/{id}")
     public ResponseEntity<UserResponseDTO> update(
             @PathVariable Long id,
@@ -79,6 +134,21 @@ public class UserController {
         return ResponseEntity.ok(userMapper.toResponse(updatedUser));
     }
 
+    @ApiResponse(
+            responseCode = "404",
+            description = "User Not Found",
+            content = @Content(
+                    mediaType = "text/plain",
+                    schema = @Schema(implementation = String.class)
+            )
+    )
+    @ApiResponse(
+            responseCode = "204",
+            description = "User deleted",
+            content = @Content
+    )
+    @Operation(summary = "Delete a user")
+    @SecurityRequirement(name = "basicAuth")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id){
         userUseCase.deleteById(id);
@@ -86,6 +156,21 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
+    @ApiResponse(
+            responseCode = "200",
+            description = "Operation completed successfully",
+            useReturnTypeSchema = true
+    )
+    @ApiResponse(
+            responseCode = "400",
+            description = "Invalid request data",
+            content = @Content(
+                    mediaType = "text/plain",
+                    schema = @Schema(implementation = String.class)
+            )
+    )
+    @Operation(summary = "Import users from a CSV file")
+    @SecurityRequirement(name = "basicAuth")
     @PostMapping(value = "/import", consumes = "multipart/form-data")
     public ResponseEntity<UserImportResponseDTO> importUsers(
             @RequestParam("file")MultipartFile file) throws IOException{
