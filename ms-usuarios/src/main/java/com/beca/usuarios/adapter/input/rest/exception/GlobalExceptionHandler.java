@@ -6,12 +6,12 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.util.Map;
-import java.util.NoSuchElementException;
+import java.util.*;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -33,19 +33,25 @@ public class GlobalExceptionHandler {
     }
 
     @ApiResponse(
-            responseCode = "404",
+            responseCode = "400",
             description = "Invalid request data",
             content = @Content(
-                    mediaType = "text/plain",
-                    schema = @Schema(implementation = String.class)
+                    mediaType = "application/json"
             )
     )
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<String> handleValidationError(
+    public ResponseEntity<Map <String, List<String>>> handleValidationError(
             MethodArgumentNotValidException exception){
-        return ResponseEntity
-                .status(400)
-                .body("Invalid user data");
+                Map <String, List<String>> errors = new LinkedHashMap<>();
+                for (FieldError error:exception.getBindingResult().getFieldErrors()){
+                    String field = error.getField();
+
+                    if (!errors.containsKey(field)){
+                        errors.put(field, new ArrayList<>());
+                    }
+                    errors.get(field).add(error.getDefaultMessage());
+                }
+                return ResponseEntity.badRequest().body(errors);
     }
 
     @ApiResponse(
