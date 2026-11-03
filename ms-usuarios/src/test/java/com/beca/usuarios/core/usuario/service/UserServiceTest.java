@@ -172,4 +172,37 @@ class UserServiceTest {
         assertEquals("ana@example.com", result.get(0).getEmail());
         verify(repository).findAll();
     }
+
+    @Test
+    void sholdRejectUpdateWhenEmailAlreadyExists(){
+        // Arrange
+        User existingUser = new User(
+                1L,
+                "Ana",
+                "ana@example.com",
+                "test-password"
+        );
+
+        User updatedUser = new User(
+                null,
+                "Ana",
+                "other@example.com",
+                "test-password"
+        );
+
+        when(repository.findById(1L))
+                .thenReturn(Optional.of(existingUser));
+
+        when(repository.existsByEmail("other@example.com"))
+                .thenReturn(true);
+
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> service.update(1L, updatedUser)
+        );
+
+        // Assert
+        assertEquals("Email already registered", exception.getMessage());
+        verify(repository, never()).save(any(User.class));
+    }
 }
