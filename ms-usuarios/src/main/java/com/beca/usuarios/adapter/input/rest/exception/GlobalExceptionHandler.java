@@ -1,6 +1,7 @@
 package com.beca.usuarios.adapter.input.rest.exception;
 
 import com.beca.usuarios.core.usuario.exception.EmailAlreadyExistsException;
+import com.beca.usuarios.core.usuario.exception.UserNotFoundException;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -15,7 +16,6 @@ import java.util.NoSuchElementException;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-
     @ApiResponse(
             responseCode = "404",
             description = "User not found",
@@ -26,10 +26,10 @@ public class GlobalExceptionHandler {
     )
     @ExceptionHandler(NoSuchElementException.class)
     public ResponseEntity<String> handleNotFound(
-            NoSuchElementException exception){
+            UserNotFoundException exception){
         return ResponseEntity
                 .status(404)
-                .body("User not found");
+                .body(exception.getMessage());
     }
 
     @ApiResponse(

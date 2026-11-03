@@ -1,6 +1,7 @@
 package com.beca.usuarios.core.usuario.service;
 
 import com.beca.usuarios.core.usuario.exception.EmailAlreadyExistsException;
+import com.beca.usuarios.core.usuario.exception.UserNotFoundException;
 import com.beca.usuarios.core.usuario.model.User;
 import com.beca.usuarios.core.usuario.port.output.UserRepositoryPort;
 import org.junit.jupiter.api.BeforeEach;
@@ -86,7 +87,7 @@ class UserServiceTest {
 
         //Act
         assertThrows(
-                NoSuchElementException.class,
+                UserNotFoundException.class,
                 () -> service.findById(99L)
         );
 
@@ -124,7 +125,7 @@ class UserServiceTest {
 
 
         assertThrows(
-                NoSuchElementException.class,
+                UserNotFoundException.class,
                 () -> service.deleteById(99L)
         );
 
