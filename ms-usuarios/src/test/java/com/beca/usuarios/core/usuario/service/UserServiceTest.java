@@ -1,0 +1,175 @@
+package com.beca.usuarios.core.usuario.service;
+
+import com.beca.usuarios.core.usuario.model.User;
+import com.beca.usuarios.core.usuario.port.output.UserRepositoryPort;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+class UserServiceTest {
+
+    private UserRepositoryPort repository;
+    private UserService service;
+
+    @BeforeEach
+    void setUp(){
+        repository = mock(UserRepositoryPort.class);
+        service = new UserService(repository);
+    }
+    @Test
+    void shouldRejectUserWhenEmailAlreadyExists(){
+
+        User user = new User(
+                null,
+                "Ana",
+                "ana@example.com",
+                "test-password"
+        );
+
+        when(repository.existsByEmail("ana@example.com"))
+                .thenReturn(true);
+
+        //Act
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> service.create(user)
+        );
+
+        //Assert
+        assertEquals("Email already registered", exception.getMessage());
+        verify(repository, never()).save(any(User.class));
+
+    }
+
+    @Test
+    void shouldCreateUserWhenEmailDoesNotExist(){
+
+        User user = new User(
+                null,
+                "Ana",
+                "ana@example.com",
+                "test-password"
+        );
+        User savedUser = new User(
+                1L,
+                "Ana",
+                "ana@example.com",
+                "test-password"
+        );
+
+        when(repository.existsByEmail("ana@example.com"))
+                .thenReturn(false);
+
+        when(repository.save(user)).thenReturn(savedUser);
+
+        //Act
+        User result = service.create(user);
+
+        //Assert
+        assertEquals(1L, result.getId());
+        assertEquals("Ana", result.getName());
+        assertEquals("ana@example.com", result.getEmail());
+        verify(repository).save(user);
+    }
+
+    @Test
+    void shouldThrowExceptionWhenUserIsNotFound(){
+
+        when(repository.findById(99L)).thenReturn(Optional.empty());
+
+        //Act
+        assertThrows(
+                NoSuchElementException.class,
+                () -> service.findById(99L)
+        );
+
+        //Assert
+        verify(repository).findById(99L);
+    }
+
+    @Test
+    void shouldReturnUserWhenIdExists(){
+
+        User user = new User(
+                1L,
+                "Ana",
+                "ana@example.com",
+                "test-password"
+        );
+
+        when(repository.findById(1L)).thenReturn(Optional.of(user));
+
+        //Act
+        User result = service.findById(1L);
+
+        //Assert
+        assertEquals(1L, result.getId());
+        assertEquals("Ana", result.getName());
+        assertEquals("ana@example.com", result.getEmail());
+        verify(repository).findById(1L);
+
+    }
+
+    @Test
+    void shouldNotDeleteUserWhenIdDoesNotExist(){
+
+        when(repository.findById(99L)).thenReturn(Optional.empty());
+
+
+        assertThrows(
+                NoSuchElementException.class,
+                () -> service.deleteById(99L)
+        );
+
+        //Assert
+        verify(repository, never()).deleteById(anyLong());
+    }
+
+    @Test
+    void shouldDeleteUserWhenIdExists(){
+        //Arrange
+        User user = new User(
+                1L,
+                "Ana",
+                "ana@example.com",
+                "test-password"
+        );
+
+        when(repository.findById(1L)).thenReturn(Optional.of(user));
+
+        //Act
+        service.deleteById(1L);
+
+        //Assert
+        verify(repository).deleteById(1L);
+    }
+
+    @Test
+    void shouldReturnAllUsers(){
+        //Arrange
+        User user = new User(
+                1L,
+                "Ana",
+                "ana@example.com",
+                "test-password"
+        );
+
+        when(repository.findAll()).thenReturn(List.of(user));
+
+        //Act
+        List<User> result = service.findAll();
+
+        //Assert
+        assertEquals(1, result.size());
+        assertEquals(1L, result.get(0).getId());
+        assertEquals("Ana", result.get(0).getName());
+        assertEquals("ana@example.com", result.get(0).getEmail());
+        verify(repository).findAll();
+    }
+}
