@@ -33,6 +33,20 @@ services:
     networks:
       - users-network
 
+
+  ms-transacoes:
+    build: ./ms-transacoes
+    ports:
+      - "8081:8081"
+    environment:
+      DB_URL: jdbc:postgresql://transactions-db:5432/${TRANSACTIONS_DB_NAME}
+      DB_USERNAME: ${TRANSACTIONS_DB_USER}
+      DB_PASSWORD: ${TRANSACTIONS_DB_PASSWORD}
+    depends_on:
+      - transactions-db
+    networks:
+      - transactions-network
+
   # Banco de dados do MS2 - Transações
   transactions-db:
     image: postgres:17

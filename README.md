@@ -2,6 +2,25 @@
 API REST para gestão financeira de múltiplos usuários, desenvolvida com Java, Spring Boot, PostgreSQL e Docker, permitindo gerenciar usuários,
 transações financeiras, saldos, conversão de moedas e análise de despesas.
 
+## Executar com Docker Compose
+
+Na raiz do projeto, copie o `.env.example` para `.env` e preencha as variáveis dos dois bancos. Mantenha o `.env` fora do Git.
+
+Com o Docker em execução, rode na raiz do projeto:
+
+```bash
+docker compose up --build -d
+```
+
+O comando gera os JARs durante a construção das imagens e sobe os dois microsserviços e seus bancos PostgreSQL.
+
+| Microsserviço | Endereço local |
+| --- | --- |
+| MS1 — Usuários | `http://localhost:8080` |
+| MS2 — Transações | `http://localhost:8081` |
+
+Para conferir se os quatro serviços estão em execução, use `docker compose ps`. Para parar o ambiente preservando os dados dos bancos, use `docker compose down`.
+
 ## MS1 - Serviço de usuários
 
 Responsável pelo cadastro, consulta, atualização e exclusão de usuários, além da importação de usuários por arquivo CSV.
@@ -73,24 +92,25 @@ Exemplos: ms-usuarios/examples
 
 Em desenvolvimento. Até o momento, foram validadas a compilação e a inicialização da aplicação com conexão ao PostgreSQL.
 
-### Execução local
+### Executar o MS2 pelo IntelliJ (opcional)
 
-O banco é executado no Docker e a aplicação pelo Intellij.
+Neste modo, o banco roda no Docker e a aplicação roda pelo IntelliJ. Se o ambiente completo estiver ativo, execute `docker compose stop ms-transacoes` para liberar a porta `8081`.
 
-Na raiz do projeto, com as variáveis TRANSACTIONS_DB_NAME, TRANSACTIONS_DB_USER e TRANSACTIONS_DB_PASSWORD preenchidas no .env, execute:
+Com `TRANSACTIONS_DB_NAME`, `TRANSACTIONS_DB_USER` e `TRANSACTIONS_DB_PASSWORD` preenchidas no `.env`, rode na raiz do projeto:
+
+```bash
 docker compose up -d transactions-db
+```
 
-Na configuração de execução de MsTransacoesApplication no intelliJ, defina:
+Na configuração de execução de `MsTransacoesApplication` no IntelliJ, preencha as variáveis de ambiente abaixo.
 
 | Variável | Valor |
-| -------- | ----- |
-| DB_URL | jdbc:postgresql://localhost:5434/<nome-do-banco> |
-| DB_USERNAME | Valor de TRANSACTIONS_DB_USER do .env |
-| DB_PASSWORD | Valor de TRANSACTIONS_DB_PASSWORD do .env |
+| --- | --- |
+| `DB_URL` | `jdbc:postgresql://localhost:5434/<nome-do-banco>` |
+| `DB_USERNAME` | Valor de `TRANSACTIONS_DB_USER` no `.env` |
+| `DB_PASSWORD` | Valor de `TRANSACTIONS_DB_PASSWORD` no `.env` |
 
-Substitua <nome-do-banco> pelo valor de TRANSACTIONS_DB_NAME
+Substitua `<nome-do-banco>` pelo valor de `TRANSACTIONS_DB_NAME` e execute `MsTransacoesApplication`. O serviço usa a porta `8081`.
 
-Execute MsTransacoesApplication. O serviço utiliza a porta 8081
-
-O compose lê o .env, mas a execução pelo IntelliJ precisa receber as variáveis separadamente. Não versionar credenciais.-
+O Compose lê o `.env`. Para rodar pelo IntelliJ, forneça as variáveis na configuração de execução.
 
