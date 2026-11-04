@@ -24,7 +24,7 @@ public class GlobalExceptionHandler {
                     schema = @Schema(implementation = String.class)
             )
     )
-    @ExceptionHandler(NoSuchElementException.class)
+    @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<String> handleNotFound(
             UserNotFoundException exception){
         return ResponseEntity
@@ -72,7 +72,7 @@ public class GlobalExceptionHandler {
 
     @ApiResponse(
             responseCode = "409",
-            description = "Emailalready registered",
+            description = "Email already registered",
             content = @Content(
                     mediaType = "text/plain",
                     schema = @Schema(implementation = String.class)
