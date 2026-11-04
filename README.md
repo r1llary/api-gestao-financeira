@@ -78,9 +78,9 @@ Em desenvolvimento. Até o momento, foram validadas a compilação e a inicializ
 O banco é executado no Docker e a aplicação pelo Intellij.
 
 Na raiz do projeto, com as variáveis TRANSACTIONS_DB_NAME, TRANSACTIONS_DB_USER e TRANSACTIONS_DB_PASSWORD preenchidas no .env, execute:
-docker compose up -d transactions_db
+docker compose up -d transactions-db
 
-Na confiuração de execução de MsTransacoesApplication no intelliJ, defina:
+Na configuração de execução de MsTransacoesApplication no intelliJ, defina:
 
 | Variável | Valor |
 | -------- | ----- |
