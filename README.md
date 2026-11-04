@@ -1,5 +1,6 @@
 # api-gestao-financeira
-API REST para gestão financeira de múltiplos usuários, desenvolvida com Java, Spring Boot, PostgreSQL e Docker, permitindo gerenciar usuários, transações financeiras, saldos, conversão de moedas e análise de despesas.
+API REST para gestão financeira de múltiplos usuários, desenvolvida com Java, Spring Boot, PostgreSQL e Docker, permitindo gerenciar usuários,
+transações financeiras, saldos, conversão de moedas e análise de despesas.
 
 ## MS1 - Serviço de usuários
 
@@ -67,3 +68,29 @@ no campo file.
 
 Cabeçalho: name,email,password.
 Exemplos: ms-usuarios/examples
+
+## MS2 - Serviço de transações
+
+Em desenvolvimento. Até o momento, foram validadas a compilação e a inicialização da aplicação com conexão ao PostgreSQL.
+
+### Execução local
+
+O banco é executado no Docker e a aplicação pelo Intellij.
+
+Na raiz do projeto, com as variáveis TRANSACTIONS_DB_NAME, TRANSACTIONS_DB_USER e TRANSACTIONS_DB_PASSWORD preenchidas no .env, execute:
+docker compose up -d transactions-db
+
+Na configuração de execução de MsTransacoesApplication no intelliJ, defina:
+
+| Variável | Valor |
+| -------- | ----- |
+| DB_URL | jdbc:postgresql://localhost:5434/<nome-do-banco> |
+| DB_USERNAME | Valor de TRANSACTIONS_DB_USER do .env |
+| DB_PASSWORD | Valor de TRANSACTIONS_DB_PASSWORD do .env |
+
+Substitua <nome-do-banco> pelo valor de TRANSACTIONS_DB_NAME
+
+Execute MsTransacoesApplication. O serviço utiliza a porta 8081
+
+O compose lê o .env, mas a execução pelo IntelliJ precisa receber as variáveis separadamente. Não versionar credenciais.-
+
