@@ -1,9 +1,12 @@
 package com.beca.usuarios.core.usuario.service;
 
+import com.beca.usuarios.core.usuario.exception.EmailAlreadyExistsException;
+import com.beca.usuarios.core.usuario.exception.UserNotFoundException;
 import com.beca.usuarios.core.usuario.model.User;
 import com.beca.usuarios.core.usuario.port.output.UserRepositoryPort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.data.jpa.domain.PredicateSpecification;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -36,8 +39,8 @@ class UserServiceTest {
                 .thenReturn(true);
 
         //Act
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
+        EmailAlreadyExistsException exception = assertThrows(
+                EmailAlreadyExistsException.class,
                 () -> service.create(user)
         );
 
@@ -85,7 +88,7 @@ class UserServiceTest {
 
         //Act
         assertThrows(
-                NoSuchElementException.class,
+                UserNotFoundException.class,
                 () -> service.findById(99L)
         );
 
@@ -123,7 +126,7 @@ class UserServiceTest {
 
 
         assertThrows(
-                NoSuchElementException.class,
+                UserNotFoundException.class,
                 () -> service.deleteById(99L)
         );
 
@@ -196,13 +199,75 @@ class UserServiceTest {
         when(repository.existsByEmail("other@example.com"))
                 .thenReturn(true);
 
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
+        EmailAlreadyExistsException exception = assertThrows(
+                EmailAlreadyExistsException.class,
                 () -> service.update(1L, updatedUser)
         );
 
         // Assert
         assertEquals("Email already registered", exception.getMessage());
         verify(repository, never()).save(any(User.class));
+    }
+
+    @Test
+    void shouldRejectDuplicateEmailAfterNormalization(){
+        User user = new User(
+                null,
+                "Ana",
+                " ANA@EXAMPLE.COM ",
+                "test-password"
+        );
+
+        when(repository.existsByEmail("ana@example.com"))
+                .thenReturn(true);
+
+        assertEquals("ana@example.com", user.getEmail());
+
+        assertThrows(
+                EmailAlreadyExistsException.class,
+                () -> service.create(user)
+        );
+
+        verify(repository).existsByEmail("ana@example.com");
+        verify(repository, never()).save(any(User.class));
+    }
+
+    @Test
+    void shouldUpdateUserSuccessfully() {
+        // Arrange
+        User existingUser = new User(
+                1L,
+                "Ana",
+                "ana@example.com",
+                "old-password-hash"
+        );
+
+        User requestedUser = new User(
+                null,
+                "Ana Atualizada",
+                "novo@example.com",
+                "new-password-hash"
+        );
+
+        when(repository.findById(1L))
+                .thenReturn(Optional.of(existingUser));
+
+        when(repository.existsByEmail("novo@example.com"))
+                .thenReturn(false);
+
+        when(repository.save(any(User.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        // Act
+        User result = service.update(1L, requestedUser);
+
+        // Assert
+        assertEquals(1L, result.getId());
+        assertEquals("Ana Atualizada", result.getName());
+        assertEquals("novo@example.com", result.getEmail());
+        assertEquals("new-password-hash", result.getPasswordHash());
+
+        verify(repository).existsByEmail("novo@example.com");
+        verify(repository).save(result);
     }
 }

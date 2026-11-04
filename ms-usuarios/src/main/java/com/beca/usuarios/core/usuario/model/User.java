@@ -1,5 +1,7 @@
 package com.beca.usuarios.core.usuario.model;
 
+import java.util.Locale;
+
 public class User {
     private Long id;
     private String name;
@@ -15,16 +17,12 @@ public class User {
             throw new IllegalArgumentException("E-mail is required!");
         }
         if (passwordHash == null || passwordHash.isBlank()){
-            throw new IllegalArgumentException("A credecial do usuário é obrigatória!");
+            throw new IllegalArgumentException("User credential is required");
         }
         this.id = id;
         this.name = name;
-        this.email = email;
+        this.email = email.trim().toLowerCase(Locale.ROOT);
         this.passwordHash = passwordHash;
-    }
-
-    public User(){
-
     }
 
     public Long getId() {

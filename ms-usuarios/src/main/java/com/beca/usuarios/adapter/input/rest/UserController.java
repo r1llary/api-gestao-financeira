@@ -18,9 +18,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
-
+import org.springframework.security.access.AccessDeniedException;
 import java.io.IOException;
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -50,6 +50,14 @@ public class UserController {
     )
     @Operation(summary = "Create a user")
     @ApiResponse(responseCode = "201", description =  "User created")
+    @ApiResponse(
+            responseCode = "409",
+            description = "Email already registered",
+            content = @Content(
+                    mediaType = "text/plain",
+                    schema = @Schema(implementation = String.class)
+            )
+    )
     @PostMapping
     public ResponseEntity<UserResponseDTO> create(
             @Valid @RequestBody UserRequestDTO request
@@ -121,13 +129,27 @@ public class UserController {
                     schema = @Schema(implementation = String.class)
             )
     )
+    @ApiResponse(
+            responseCode = "403",
+            description = "Access denied: you can only change your own user data"
+    )
     @Operation(summary = "Update a user")
     @SecurityRequirement(name = "basicAuth")
+    @ApiResponse(
+            responseCode = "409",
+            description = "Email already registered",
+            content = @Content(
+                    mediaType = "text/plain",
+                    schema = @Schema(implementation = String.class)
+            )
+    )
     @PutMapping("/{id}")
     public ResponseEntity<UserResponseDTO> update(
             @PathVariable Long id,
-            @Valid @RequestBody UserRequestDTO request){
+            @Valid @RequestBody UserRequestDTO request,
+            Principal principal){
 
+        validateOwnership(id, principal);
         User user = userMapper.toDomain(request, passwordEncoder);
         User updatedUser = userUseCase.update(id, user);
 
@@ -147,10 +169,17 @@ public class UserController {
             description = "User deleted",
             content = @Content
     )
+    @ApiResponse(
+            responseCode = "403",
+            description = "Access denied: you can only change your own user data"
+    )
     @Operation(summary = "Delete a user")
     @SecurityRequirement(name = "basicAuth")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id){
+    public ResponseEntity<Void> delete(@PathVariable Long id, Principal principal){
+
+        validateOwnership(id, principal);
+
         userUseCase.deleteById(id);
 
         return ResponseEntity.noContent().build();
@@ -182,5 +211,15 @@ public class UserController {
                 userCsvImporter.read(file.getInputStream());
 
         return ResponseEntity.ok(response);
+    }
+
+    private void validateOwnership(Long id, Principal principal){
+        User existingUser = userUseCase.findById(id);
+
+        if (principal == null || !existingUser.getEmail().equals(principal.getName())){
+            throw new AccessDeniedException(
+            "You can only change your own user data"
+            );
+        }
     }
 }
