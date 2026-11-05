@@ -138,7 +138,7 @@ O acesso às transações de cada usuário será validado junto
 
 ### Depósito
 
-POST http://localhost:8081/transactions/deposits
+POST http://localhost:8081/transactions
 
 Exige HTTP Basic com e-mail e senha de um usuário cadastrado no MS1.
 O dono do depósito é identificado pela autenticação.

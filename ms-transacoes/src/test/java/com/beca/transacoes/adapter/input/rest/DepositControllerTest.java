@@ -84,7 +84,7 @@ class DepositControllerTest {
                 }
                 """;
 
-        mockMvc.perform(post("/transactions/deposits")
+        mockMvc.perform(post("/transactions")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json))
                 .andExpect(status().isBadRequest())

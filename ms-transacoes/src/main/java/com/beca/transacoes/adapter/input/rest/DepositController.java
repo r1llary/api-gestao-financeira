@@ -24,7 +24,7 @@ public class DepositController {
         this.depositUseCase = depositUseCase;
     }
 
-    @PostMapping("/deposits")
+    @PostMapping
     public ResponseEntity<DepositResponseDTO> deposit(
             @Valid @RequestBody DepositRequestDTO request,
             @AuthenticationPrincipal AuthenticatedUser user
