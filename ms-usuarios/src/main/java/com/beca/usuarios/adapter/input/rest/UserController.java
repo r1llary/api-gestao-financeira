@@ -89,6 +89,15 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "Get the authenticated user")
+    @SecurityRequirement(name = "basicAuth")
+    @GetMapping("/me")
+    public ResponseEntity<UserResponseDTO> findMe(Principal principal){
+        User user = userUseCase.findByEmail(principal.getName());
+
+        return  ResponseEntity.ok(userMapper.toResponse(user));
+    }
+
     @ApiResponse(
             responseCode = "200",
             description = "Operation completed successfully",
