@@ -114,3 +114,25 @@ Substitua `<nome-do-banco>` pelo valor de `TRANSACTIONS_DB_NAME` e execute `MsTr
 
 O Compose lê o `.env`. Para rodar pelo IntelliJ, forneça as variáveis na configuração de execução.
 
+### Autenticação
+
+O MS2 utiliza HTTP Basic e valida o e-mail e a senha no MS1.
+
+As requisições protegidas devem enviar as credenciais de um usuário
+cadastrado no MS1.
+
+A rota GET /auth/me retorna o ID e o e-mail do usuário autenticado.
+O campo name, quando presente, corresponde ao e-mail usado no login.
+
+- Credenciais válidas retornam 200.
+- Credenciais ausentes ou inválidas retornam 401.
+- Falha na comunicação com o MS1 retorna 503.
+
+A URL do MS1 é configurada pela variável USERS_SERVICE_URL.
+No Docker Compose, seu valor é http://ms-usuarios:8080.
+Para execução local pelo IntelliJ, o endereço padrão é
+http://localhost:8080.
+
+O acesso às transações de cada usuário será validado junto
+à implementação das rotas financeiras.
+
