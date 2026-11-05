@@ -166,7 +166,7 @@ O ID é gerado pelo banco e pode variar.
 
 - O valor é obrigatório e deve ser maior que zero.
 - Descrição e categoria são obrigatórias e não podem conter apenas espaços.
-- Dados inválidos retornam 400.
+- Dados inválidos retornam 400 com uma lista dos campos e suas mensagens de validação.
 - Credenciais ausentes ou inválidas retornam 401.
 - Indisponibilidade do serviço de autenticação retorna 503.
 
