@@ -136,3 +136,41 @@ http://localhost:8080.
 O acesso às transações de cada usuário será validado junto
 à implementação das rotas financeiras.
 
+### Depósito
+
+POST http://localhost:8081/transactions/deposits
+
+Exige HTTP Basic com e-mail e senha de um usuário cadastrado no MS1.
+O dono do depósito é identificado pela autenticação.
+
+Exemplo de corpo da requisição:
+
+```json
+{
+  "amount": 100.00,
+  "description": "Depósito inicial",
+  "category": "Deposit"
+}
+```
+
+Resposta de sucesso: HTTP 201 Created.
+
+```json
+{
+  "id": 1,
+  "status": "APPROVED"
+}
+```
+
+O ID é gerado pelo banco e pode variar.
+
+- O valor é obrigatório e deve ser maior que zero.
+- Descrição e categoria são obrigatórias e não podem conter apenas espaços.
+- Dados inválidos retornam 400.
+- Credenciais ausentes ou inválidas retornam 401.
+- Indisponibilidade do serviço de autenticação retorna 503.
+
+Testes unitários cobrem a criação do depósito aprovado no serviço,
+o uso do ID do usuário autenticado no controller e a resposta 201.
+
+
