@@ -38,6 +38,12 @@ public class UserService implements UserUseCase {
     }
 
     @Override
+    public User findByEmail(String email){
+        return respository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException());
+    }
+
+    @Override
     public User update(Long id, User user){
         User existingUser = findById(id);
 
