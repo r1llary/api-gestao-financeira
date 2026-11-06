@@ -1,5 +1,7 @@
 package com.beca.transacoes.adapter.input.rest.exception;
 
+import com.beca.transacoes.core.conta.exception.AccountNotFoundException;
+import com.beca.transacoes.core.conta.exception.AccountServiceUnavailableException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -39,18 +41,35 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(NoSuchElementException.class)
     public ResponseEntity<String> handlerNotFound(
-            NoSuchElementException exception
-    ){
+            NoSuchElementException exception) {
+
         return ResponseEntity.status(404)
                 .body(exception.getMessage());
     }
 
     @ExceptionHandler(SecurityException.class)
     public ResponseEntity<String> handlerForbidden(
-            SecurityException exception
-    ){
+            SecurityException exception) {
+
         return ResponseEntity.status(403)
                 .body(exception.getMessage());
+    }
+
+    @ExceptionHandler(AccountNotFoundException.class)
+    public ResponseEntity<String> handlerAccountNotFound(
+            AccountNotFoundException exception) {
+
+        return ResponseEntity.status(400)
+                .body(exception.getMessage());
+    }
+
+    @ExceptionHandler(AccountServiceUnavailableException.class)
+    public ResponseEntity<String> handlerAccountServiceUnavailable(
+            AccountServiceUnavailableException exception) {
+
+        return ResponseEntity.status(503)
+                .body(exception.getMessage());
+
     }
 
     public record FieldValidationError(
