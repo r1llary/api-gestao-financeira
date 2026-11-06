@@ -19,4 +19,14 @@ public class TransactionPersistenceAdapter implements TransactionRepositoryPort 
         TransactionEntity savedEntity = repository.save(entity);
         return savedEntity.toDomain();
     }
+
+    @Override
+    public Transaction findById(Long id){
+        TransactionEntity entity = repository.findById(id).orElse(null);
+
+        if (entity == null){
+            return null;
+        }
+        return entity.toDomain();
+    }
 }
