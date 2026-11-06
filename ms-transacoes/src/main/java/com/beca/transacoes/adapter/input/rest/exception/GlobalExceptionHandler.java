@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -34,6 +35,22 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.badRequest().body(response);
+    }
+
+    @ExceptionHandler(NoSuchElementException.class)
+    public ResponseEntity<String> handlerNotFound(
+            NoSuchElementException exception
+    ){
+        return ResponseEntity.status(404)
+                .body(exception.getMessage());
+    }
+
+    @ExceptionHandler(SecurityException.class)
+    public ResponseEntity<String> handlerForbidden(
+            SecurityException exception
+    ){
+        return ResponseEntity.status(403)
+                .body(exception.getMessage());
     }
 
     public record FieldValidationError(
