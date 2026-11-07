@@ -1,15 +1,21 @@
+
 package com.beca.transacoes.adapter.output.client;
 
 import com.beca.transacoes.core.conta.exception.AccountNotFoundException;
 import com.beca.transacoes.core.conta.exception.AccountServiceUnavailableException;
 import com.beca.transacoes.core.conta.model.Account;
 import com.beca.transacoes.core.conta.port.output.AccountGatewayPort;
+
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
+
+import java.math.BigDecimal;
+import java.net.http.HttpClient;
+import java.time.Duration;
 
 @Component
 public class AccountMockAdapter implements AccountGatewayPort {
@@ -20,11 +26,14 @@ public class AccountMockAdapter implements AccountGatewayPort {
             RestClient.Builder builder,
             @Value("${clients.accounts.base-url}") String baseUrl
     ) {
-        SimpleClientHttpRequestFactory factory =
-                new SimpleClientHttpRequestFactory();
+        HttpClient httpClient = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(3))
+                .build();
 
-        factory.setConnectTimeout(3000);
-        factory.setReadTimeout(5000);
+        JdkClientHttpRequestFactory factory =
+                new JdkClientHttpRequestFactory(httpClient);
+
+        factory.setReadTimeout(Duration.ofSeconds(5));
 
         this.client = builder
                 .baseUrl(baseUrl)
@@ -34,13 +43,50 @@ public class AccountMockAdapter implements AccountGatewayPort {
 
     @Override
     public Account findByUserId(Long userId) {
-        Account[] accounts;
+
+        AccountMockResponse found = findAccountByUserId(userId);
+
+        return new Account(
+                found.userId(),
+                found.balance(),
+                found.dailyLimit(),
+                found.transactionLimit()
+        );
+    }
+
+    @Override
+    public void updateBalance(Long userId, BigDecimal newBalance) {
+
+        AccountMockResponse account = findAccountByUserId(userId);
+
+        if (account.id() == null || account.id().isBlank()) {
+            throw new AccountServiceUnavailableException();
+        }
+
+        try {
+            client.patch()
+                    .uri("/accounts/{id}", account.id())
+                    .body(new AccountBalanceUpdateRequest(newBalance))
+                    .retrieve()
+                    .toBodilessEntity();
+
+        } catch (HttpClientErrorException.NotFound exception) {
+            throw new AccountNotFoundException();
+
+        } catch (RestClientException exception) {
+            throw new AccountServiceUnavailableException();
+        }
+    }
+
+    private AccountMockResponse findAccountByUserId(Long userId) {
+
+        AccountMockResponse[] accounts;
 
         try {
             accounts = client.get()
                     .uri("/accounts?userId={userId}", userId)
                     .retrieve()
-                    .body(Account[].class);
+                    .body(AccountMockResponse[].class);
 
         } catch (HttpClientErrorException.NotFound exception) {
             throw new AccountNotFoundException();
@@ -53,10 +99,12 @@ public class AccountMockAdapter implements AccountGatewayPort {
             throw new AccountServiceUnavailableException();
         }
 
-        Account found = null;
+        AccountMockResponse found = null;
 
-        for (Account account : accounts) {
+        for (AccountMockResponse account : accounts) {
+
             if (account != null && userId.equals(account.userId())) {
+
                 if (found != null) {
                     throw new AccountServiceUnavailableException();
                 }
