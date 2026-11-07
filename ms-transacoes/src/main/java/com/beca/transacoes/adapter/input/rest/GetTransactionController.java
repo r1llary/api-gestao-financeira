@@ -2,6 +2,8 @@
 package com.beca.transacoes.adapter.input.rest;
 
 import com.beca.transacoes.adapter.input.security.AuthenticatedUser;
+import com.beca.transacoes.core.cambio.model.ConversionResult;
+import com.beca.transacoes.core.cambio.service.ExchangeConversionService;
 import com.beca.transacoes.core.transacao.model.Transaction;
 import com.beca.transacoes.core.transacao.model.TransactionType;
 import com.beca.transacoes.core.transacao.port.input.GetTransactionUseCase;
@@ -12,6 +14,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 
 @RestController
@@ -20,21 +23,52 @@ public class GetTransactionController {
 
     private final GetTransactionUseCase useCase;
     private final ListTransactionsUseCase listUseCase;
+    private final ExchangeConversionService conversionService;
 
     public GetTransactionController(
             GetTransactionUseCase useCase,
-            ListTransactionsUseCase listUseCase) {
+            ListTransactionsUseCase listUseCase,
+            ExchangeConversionService conversionService) {
 
         this.useCase = useCase;
         this.listUseCase = listUseCase;
+        this.conversionService = conversionService;
     }
 
     @GetMapping("/{id}")
-    public Transaction getById(
+    public TransactionConversionResponse getById(
             @PathVariable Long id,
             @AuthenticationPrincipal AuthenticatedUser user) {
 
-        return useCase.getById(id, user.id());
+        Transaction transaction = useCase.getById(id, user.id());
+
+        LocalDate date = transaction.getOccurredAt()
+                .atZone(ZoneId.of("America/Sao_Paulo"))
+                .toLocalDate();
+
+        ConversionResult usd = conversionService.convert(
+                transaction.getAmount(), "USD", date
+        );
+
+        ConversionResult eur = conversionService.convert(
+                transaction.getAmount(), "EUR", date
+        );
+
+        return new TransactionConversionResponse(
+                transaction.getId(),
+                transaction.getUserId(),
+                transaction.getAmount(),
+                transaction.getType(),
+                transaction.getOccurredAt(),
+                transaction.getDescription(),
+                transaction.getCategory(),
+                transaction.getStatus(),
+                transaction.getDestinationUserId(),
+                transaction.getRejectionReason(),
+                "BRL",
+                usd,
+                eur
+        );
     }
 
     @GetMapping

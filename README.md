@@ -173,4 +173,89 @@ O ID é gerado pelo banco e pode variar.
 Testes unitários cobrem a criação do depósito aprovado no serviço,
 o uso do ID do usuário autenticado no controller e a resposta 201.
 
+### Conversão de moedas — BrasilAPI
+
+O MS2 permite consultar uma transação com seu valor
+original em reais (BRL) e as conversões para dólar
+(USD) e euro (EUR).
+
+As cotações são consultadas na BrasilAPI, utilizando
+o boletim de fechamento PTAX.
+
+#### Endpoint
+
+GET /transactions/{id}
+
+Requer autenticação HTTP Basic.
+
+Exemplo:
+
+GET http://localhost:8081/transactions/1
+
+A resposta inclui os dados originais da transação
+e os campos:
+
+- originalCurrency: moeda original (BRL).
+- usd: conversão para dólar.
+- eur: conversão para euro.
+
+Cada conversão apresenta:
+
+- currency: moeda consultada.
+- convertedAmount: valor convertido.
+- rate: cotação utilizada.
+- quoteDate: data da cotação.
+- available: disponibilidade da conversão.
+
+#### Cálculo
+
+Valor convertido = valor em BRL / cotação de venda
+
+O cálculo utiliza BigDecimal e arredondamento
+HALF_UP para duas casas decimais.
+
+A data da transação é interpretada no fuso
+America/Sao_Paulo para consultar a cotação.
+
+#### Tratamento de falhas
+
+Se a BrasilAPI estiver indisponível ou não retornar
+uma cotação válida, a transação continua consultável.
+
+Nesse caso, a conversão retorna:
+
+- available: false
+- convertedAmount: null
+- rate: null
+- quoteDate: null
+
+Nenhuma taxa fictícia é utilizada.
+
+#### Configuração
+
+Variável de ambiente:
+
+EXCHANGE_SERVICE_URL=https://brasilapi.com.br
+
+Endpoint da BrasilAPI:
+
+GET /api/cambio/v1/cotacao/{moeda}/{data}
+
+A URL é configurável e a integração possui
+timeout de conexão e de leitura.
+
+A variável está documentada no .env.example
+e é repassada ao MS2 pelo Docker Compose.
+
+#### Testes
+
+Os testes automatizados verificam:
+
+- Conversão de BRL para USD.
+- Conversão de BRL para EUR.
+- Retorno de indisponibilidade quando a API falha.
+
+As conversões também foram validadas no Postman.
+
+
 
