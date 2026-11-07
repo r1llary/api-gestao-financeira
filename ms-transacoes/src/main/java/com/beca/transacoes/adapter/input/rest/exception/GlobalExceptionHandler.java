@@ -55,13 +55,20 @@ public class GlobalExceptionHandler {
                 .body(exception.getMessage());
     }
 
+
     @ExceptionHandler(AccountNotFoundException.class)
-    public ResponseEntity<String> handlerAccountNotFound(
+    public ResponseEntity<ValidationErrorResponse> handlerAccountNotFound(
             AccountNotFoundException exception) {
 
-        return ResponseEntity.status(400)
-                .body(exception.getMessage());
+        ValidationErrorResponse response = new ValidationErrorResponse(
+                404,
+                exception.getMessage(),
+                List.of()
+        );
+
+        return ResponseEntity.status(404).body(response);
     }
+
 
     @ExceptionHandler(AccountServiceUnavailableException.class)
     public ResponseEntity<String> handlerAccountServiceUnavailable(
