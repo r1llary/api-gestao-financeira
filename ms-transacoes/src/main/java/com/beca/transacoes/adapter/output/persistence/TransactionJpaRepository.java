@@ -14,4 +14,8 @@ public interface TransactionJpaRepository extends JpaRepository<TransactionEntit
             Instant start,
             Instant end
     );
+
+
+    List<TransactionEntity> findByUserIdOrderByOccurredAtDesc(Long userId);
+
 }

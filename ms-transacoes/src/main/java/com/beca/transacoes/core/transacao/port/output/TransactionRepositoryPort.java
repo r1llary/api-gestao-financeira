@@ -15,4 +15,8 @@ public interface TransactionRepositoryPort {
             Instant start,
             Instant end
     );
+
+
+    List<Transaction> findByUserId(Long userId);
+
 }
