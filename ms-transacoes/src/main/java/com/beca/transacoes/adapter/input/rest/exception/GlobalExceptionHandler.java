@@ -2,6 +2,8 @@ package com.beca.transacoes.adapter.input.rest.exception;
 
 import com.beca.transacoes.core.conta.exception.AccountNotFoundException;
 import com.beca.transacoes.core.conta.exception.AccountServiceUnavailableException;
+import com.beca.transacoes.core.transacao.exception.TransactionAccessDeniedException;
+import com.beca.transacoes.core.transacao.exception.TransactionNotFoundException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -40,20 +42,32 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(NoSuchElementException.class)
-    public ResponseEntity<String> handlerNotFound(
+    public ResponseEntity<ValidationErrorResponse> handlerNotFound(
             NoSuchElementException exception) {
 
-        return ResponseEntity.status(404)
-                .body(exception.getMessage());
+        ValidationErrorResponse response = new ValidationErrorResponse(
+                404,
+                exception.getMessage(),
+                List.of()
+        );
+
+        return ResponseEntity.status(404).body(response);
     }
+
 
     @ExceptionHandler(SecurityException.class)
-    public ResponseEntity<String> handlerForbidden(
+    public ResponseEntity<ValidationErrorResponse> handlerForbidden(
             SecurityException exception) {
 
-        return ResponseEntity.status(403)
-                .body(exception.getMessage());
+        ValidationErrorResponse response = new ValidationErrorResponse(
+                403,
+                exception.getMessage(),
+                List.of()
+        );
+
+        return ResponseEntity.status(403).body(response);
     }
+
 
 
     @ExceptionHandler(AccountNotFoundException.class)
@@ -69,14 +83,43 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(404).body(response);
     }
 
-
     @ExceptionHandler(AccountServiceUnavailableException.class)
-    public ResponseEntity<String> handlerAccountServiceUnavailable(
+    public ResponseEntity<ValidationErrorResponse> handlerAccountServiceUnavailable(
             AccountServiceUnavailableException exception) {
 
-        return ResponseEntity.status(503)
-                .body(exception.getMessage());
+        ValidationErrorResponse response = new ValidationErrorResponse(
+                503,
+                exception.getMessage(),
+                List.of()
+        );
 
+        return ResponseEntity.status(503).body(response);
+    }
+
+    @ExceptionHandler(TransactionNotFoundException.class)
+    public ResponseEntity<ValidationErrorResponse> handleTransactionNotFound(
+            TransactionNotFoundException exception) {
+
+        ValidationErrorResponse response = new ValidationErrorResponse(
+                404,
+                exception.getMessage(),
+                List.of()
+        );
+
+        return ResponseEntity.status(404).body(response);
+    }
+
+    @ExceptionHandler(TransactionAccessDeniedException.class)
+    public ResponseEntity<ValidationErrorResponse> handleTransactionAccessDenied(
+            TransactionAccessDeniedException exception) {
+
+        ValidationErrorResponse response = new ValidationErrorResponse(
+                403,
+                exception.getMessage(),
+                List.of()
+        );
+
+        return ResponseEntity.status(403).body(response);
     }
 
     public record FieldValidationError(
