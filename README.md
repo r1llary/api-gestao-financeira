@@ -257,5 +257,67 @@ Os testes automatizados verificam:
 
 As conversões também foram validadas no Postman.
 
+### Resumo de despesas por categoria
+
+O MS2 permite consultar o total de despesas do usuário
+autenticado, agrupado por categoria.
+
+#### Endpoint
+
+GET /transactions/expenses/summary
+
+Requer autenticação HTTP Basic.
+
+Sem informar datas, a consulta considera o mês atual.
+
+Também é possível informar um período:
+
+GET /transactions/expenses/summary?startDate=2026-11-01&endDate=2026-11-30
+
+#### Regras
+
+- Considera somente transações APPROVED.
+- Inclui saques (WITHDRAWAL).
+- Inclui transferências enviadas (TRANSFER).
+- Inclui compras (PURCHASE).
+- Exclui depósitos e transações rejeitadas.
+- Retorna somente as despesas do usuário autenticado.
+
+#### Exemplo de resposta
+
+{
+"startDate": "2026-11-01",
+"endDate": "2026-11-30",
+"totalAmount": 600.00,
+"categories": [
+{
+"category": "Cash",
+"total": 500.00
+},
+{
+"category": "Food",
+"total": 50.00
+},
+{
+"category": "Transfer",
+"total": 50.00
+}
+]
+}
+
+#### Validações
+
+- A data inicial não pode ser posterior à data final.
+- Se uma data for informada, a outra também será obrigatória.
+- Períodos inválidos retornam HTTP 400 em JSON.
+
+#### Testes
+
+Foram realizados testes unitários de agrupamento
+por categoria e exclusão de transações não elegíveis.
+
+O endpoint também foi validado no Postman.
+
+
 
 
