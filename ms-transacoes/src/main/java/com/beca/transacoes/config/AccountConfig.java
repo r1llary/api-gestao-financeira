@@ -62,9 +62,14 @@ public class AccountConfig {
     @Bean
     public PurchaseUseCase purchaseUseCase(
             TransactionRepositoryPort repository,
-            TransactionValidationService validationService) {
+            TransactionValidationService validationService,
+            AccountGatewayPort accountGateway) {
 
-        return new PurchaseService(repository, validationService);
+        return new PurchaseService(
+                repository,
+                validationService,
+                accountGateway
+        );
     }
 
 }

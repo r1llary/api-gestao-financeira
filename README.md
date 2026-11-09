@@ -245,3 +245,36 @@ A compensação também pode falhar.
 Portanto, a implementação não garante atomicidade entre as
 duas contas. Em um ambiente de produção, seriam necessários
 mecanismos adicionais de controle, reconciliação e recuperação.
+
+
+### Compra (Purchase) — MS2
+
+A funcionalidade de compra permite registrar despesas
+e descontar o valor do saldo do usuário.
+
+Regras:
+- Compras aprovadas descontam o valor do saldo no MockAPI.
+- Compras rejeitadas não alteram o saldo.
+- Falhas ao salvar a transação impedem a atualização do saldo.
+- Falhas na atualização do saldo propagam um erro.
+
+#### Testes
+
+Foram implementados testes unitários com JUnit e Mockito
+e um teste de integração utilizando H2.
+
+Os testes verificam:
+- Compra aprovada com desconto no saldo.
+- Compra rejeitada por limite excedido.
+- Falha no salvamento da transação.
+- Falha na comunicação com o MockAPI.
+- Rollback do registro no banco de dados.
+
+#### Limitação conhecida
+
+O @Transactional permite reverter alterações no banco
+quando ocorre uma exceção, mas não desfaz alterações
+já realizadas no MockAPI.
+
+Por isso, ainda existe risco de inconsistência entre
+o registro da compra e o saldo externo.
