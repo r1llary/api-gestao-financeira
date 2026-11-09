@@ -1,8 +1,13 @@
 package com.beca.transacoes.adapter.output.persistence;
 
 import com.beca.transacoes.core.transacao.model.Transaction;
+import com.beca.transacoes.core.transacao.model.TransactionStatus;
 import com.beca.transacoes.core.transacao.port.output.TransactionRepositoryPort;
 import org.springframework.stereotype.Repository;
+
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 @Repository
 public class TransactionPersistenceAdapter implements TransactionRepositoryPort {
@@ -28,5 +33,28 @@ public class TransactionPersistenceAdapter implements TransactionRepositoryPort 
             return null;
         }
         return entity.toDomain();
+    }
+
+    @Override
+    public List<Transaction> findApprovedByUserIdAndPeriod(
+            Long userId,
+            Instant start,
+            Instant end
+    ) {
+        List<TransactionEntity> entities =
+                repository.findByUserIdAndStatusAndOccurredAtGreaterThanEqualAndOccurredAtLessThan(
+                        userId,
+                        TransactionStatus.APPROVED,
+                        start,
+                        end
+                );
+
+        List<Transaction> transactions = new ArrayList<>();
+
+        for (TransactionEntity entity : entities) {
+            transactions.add(entity.toDomain());
+        }
+
+        return transactions;
     }
 }

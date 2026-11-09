@@ -1,5 +1,8 @@
+
 package com.beca.transacoes.core.transacao.service;
 
+import com.beca.transacoes.core.conta.model.Account;
+import com.beca.transacoes.core.conta.port.output.AccountGatewayPort;
 import com.beca.transacoes.core.transacao.model.Transaction;
 import com.beca.transacoes.core.transacao.model.TransactionStatus;
 import com.beca.transacoes.core.transacao.model.TransactionType;
@@ -12,9 +15,14 @@ import java.time.Instant;
 public class DepositService implements DepositUseCase {
 
     private final TransactionRepositoryPort repository;
+    private final AccountGatewayPort accountGateway;
 
-    public DepositService(TransactionRepositoryPort repository) {
+    public DepositService(
+            TransactionRepositoryPort repository,
+            AccountGatewayPort accountGateway
+    ) {
         this.repository = repository;
+        this.accountGateway = accountGateway;
     }
 
     @Override
@@ -24,6 +32,16 @@ public class DepositService implements DepositUseCase {
             String description,
             String category
     ) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Amount must be positive");
+        }
+
+        Account account = accountGateway.findByUserId(userId);
+
+        BigDecimal newBalance = account.balance().add(amount);
+
+        accountGateway.updateBalance(userId, newBalance);
+
         Transaction transaction = new Transaction(
                 null,
                 userId,
