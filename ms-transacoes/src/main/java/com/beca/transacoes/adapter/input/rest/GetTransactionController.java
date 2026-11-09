@@ -3,6 +3,8 @@ package com.beca.transacoes.adapter.input.rest;
 
 import com.beca.transacoes.adapter.input.rest.dto.TransactionResponse;
 import com.beca.transacoes.adapter.input.security.AuthenticatedUser;
+import com.beca.transacoes.core.cambio.model.ConversionResult;
+import com.beca.transacoes.core.cambio.service.ExchangeConversionService;
 import com.beca.transacoes.core.transacao.model.Transaction;
 import com.beca.transacoes.core.transacao.model.TransactionType;
 import com.beca.transacoes.core.transacao.port.input.GetTransactionUseCase;
@@ -13,6 +15,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,23 +25,38 @@ public class GetTransactionController {
 
     private final GetTransactionUseCase useCase;
     private final ListTransactionsUseCase listUseCase;
+    private final ExchangeConversionService conversionService;
 
     public GetTransactionController(
             GetTransactionUseCase useCase,
-            ListTransactionsUseCase listUseCase) {
+            ListTransactionsUseCase listUseCase,
+            ExchangeConversionService conversionService) {
 
         this.useCase = useCase;
         this.listUseCase = listUseCase;
+        this.conversionService = conversionService;
     }
 
     @GetMapping("/{id}")
-    public TransactionResponse getById(
+    public TransactionConversionResponse getById(
             @PathVariable Long id,
             @AuthenticationPrincipal AuthenticatedUser user) {
 
         Transaction transaction = useCase.getById(id, user.id());
 
-        return new TransactionResponse(
+        LocalDate date = transaction.getOccurredAt()
+                .atZone(ZoneId.of("America/Sao_Paulo"))
+                .toLocalDate();
+
+        ConversionResult usd = conversionService.convert(
+                transaction.getAmount(), "USD", date
+        );
+
+        ConversionResult eur = conversionService.convert(
+                transaction.getAmount(), "EUR", date
+        );
+
+        return new TransactionConversionResponse(
                 transaction.getId(),
                 transaction.getUserId(),
                 transaction.getAmount(),
@@ -48,7 +66,10 @@ public class GetTransactionController {
                 transaction.getCategory(),
                 transaction.getStatus(),
                 transaction.getDestinationUserId(),
-                transaction.getRejectionReason()
+                transaction.getRejectionReason(),
+                "BRL",
+                usd,
+                eur
         );
     }
 
@@ -66,7 +87,7 @@ public class GetTransactionController {
             @RequestParam(required = false)
             TransactionType type) {
 
-        // Busca as transações do usuário
+        // Busca as transacoes do usuario
         List<Transaction> transactions = listUseCase.list(
                 user.id(),
                 startDate,
@@ -77,7 +98,7 @@ public class GetTransactionController {
         // Cria uma lista de DTOs
         List<TransactionResponse> responses = new ArrayList<>();
 
-        // Converte cada transação em um DTO
+        // Converte cada transacao em um DTO
         for (Transaction transaction : transactions) {
 
             TransactionResponse response = new TransactionResponse(

@@ -8,6 +8,7 @@ import com.beca.transacoes.core.transacao.model.TransactionStatus;
 import com.beca.transacoes.core.transacao.model.TransactionType;
 import com.beca.transacoes.core.transacao.port.input.GetTransactionUseCase;
 import com.beca.transacoes.core.transacao.port.input.ListTransactionsUseCase;
+import com.beca.transacoes.core.cambio.service.ExchangeConversionService;
 
 import org.junit.jupiter.api.Test;
 
@@ -50,8 +51,15 @@ class GetTransactionControllerTest {
         when(listUseCase.list(6L, null, null, null))
                 .thenReturn(List.of(transaction));
 
+        ExchangeConversionService conversionService =
+                mock(ExchangeConversionService.class);
+
         GetTransactionController controller =
-                new GetTransactionController(getUseCase, listUseCase);
+                new GetTransactionController(
+                        getUseCase,
+                        listUseCase,
+                        conversionService
+                );
 
         // Act
         List<TransactionResponse> result =
