@@ -82,5 +82,12 @@ public class AccountConfig {
         return new ExpenseSummaryService(listTransactionsUseCase);
     }
 
+    @Bean
+    public DailyExpenseSummaryUseCase dailyExpenseSummaryUseCase(
+            ListTransactionsUseCase listTransactionsUseCase) {
+
+        return new DailyExpenseSummaryService(listTransactionsUseCase);
+    }
+
 
 }

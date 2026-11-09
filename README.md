@@ -393,7 +393,6 @@ Portanto, a implementação não garante atomicidade entre as
 duas contas. Em um ambiente de produção, seriam necessários
 mecanismos adicionais de controle, reconciliação e recuperação.
 
-
 ### Compra (Purchase) — MS2
 
 A funcionalidade de compra permite registrar despesas
@@ -425,3 +424,78 @@ já realizadas no MockAPI.
 
 Por isso, ainda existe risco de inconsistência entre
 o registro da compra e o saldo externo.
+
+
+### Resumo de despesas por dia
+
+O MS2 permite consultar as despesas do usuário autenticado,
+agrupadas por dia.
+
+#### Endpoint
+
+GET /transactions/expenses/daily
+
+Requer autenticação HTTP Basic.
+
+Sem informar datas, a consulta considera o mês atual.
+
+Também é possível informar um período:
+
+GET /transactions/expenses/daily?startDate=2026-11-01&endDate=2026-11-30
+
+#### Regras
+
+- Considera somente transações APPROVED.
+- Inclui saques (WITHDRAWAL).
+- Inclui transferências enviadas (TRANSFER).
+- Inclui compras (PURCHASE).
+- Exclui depósitos e transações rejeitadas.
+- Agrupa os valores por dia, usando o fuso America/Sao_Paulo.
+- Retorna somente as despesas do usuário autenticado.
+- Apresenta o total geral e os totais diários.
+
+#### Exemplo de resposta
+
+```json
+{
+  "startDate": "2026-11-01",
+  "endDate": "2026-11-30",
+  "totalAmount": 610.00,
+  "days": [
+    {
+      "date": "2026-11-06",
+      "amount": 500.00
+    },
+    {
+      "date": "2026-11-07",
+      "amount": 100.00
+    },
+    {
+      "date": "2026-11-09",
+      "amount": 10.00
+    }
+  ]
+}
+```
+
+#### Validações
+
+- A data inicial não pode ser posterior à data final.
+- Se uma data for informada, a outra também será obrigatória.
+- Períodos inválidos retornam HTTP 400.
+- Requisições sem autenticação retornam HTTP 401.
+- Sem despesas no período, retorna total zero e lista vazia.
+
+#### Testes
+
+Foram implementados quatro testes unitários com JUnit e Mockito:
+
+- Agrupamento de despesas por dia.
+- Exclusão de depósitos e transações rejeitadas.
+- Conversão de datas para o fuso de São Paulo.
+- Retorno de total zero quando não existem despesas.
+
+Os 69 testes automatizados do MS2 passaram com sucesso.
+
+O endpoint também foi validado no Postman.
+
