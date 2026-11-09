@@ -318,7 +318,6 @@ por categoria e exclusão de transações não elegíveis.
 
 O endpoint também foi validado no Postman.
 
-
 ### Resumo de despesas por mês
 
 O MS2 permite consultar as despesas do usuário
@@ -388,6 +387,67 @@ O endpoint também foi validado com requisições HTTP,
 incluindo consultas com e sem datas, erro 400 e
 autenticação obrigatória com retorno 401.
 
+### Exportação de transações em CSV
+
+O MS2 permite exportar as transações financeiras do
+usuário autenticado para um arquivo CSV.
+
+#### Endpoint
+
+GET /transactions/export/csv
+
+Requer autenticação HTTP Basic.
+
+É possível informar um período:
+
+GET /transactions/export/csv?startDate=2026-11-01&endDate=2026-11-30
+
+Sem informar datas, o relatório inclui todas as
+transações disponíveis do usuário autenticado.
+
+#### Conteúdo do relatório
+
+O arquivo contém as seguintes colunas:
+
+- Data
+- Tipo
+- Categoria
+- Descrição
+- Valor (BRL)
+- Status
+- Motivo da rejeição
+
+#### Regras
+
+- Inclui depósitos, saques, compras e transferências.
+- Inclui transações aprovadas e rejeitadas.
+- Retorna somente transações do usuário autenticado.
+- Utiliza o fuso horário America/Sao_Paulo.
+- Utiliza ponto e vírgula como separador.
+- Utiliza UTF-8 com BOM para compatibilidade com Excel.
+- Trata aspas, separadores e quebras de linha nos textos.
+- Sem transações, retorna apenas o cabeçalho do CSV.
+
+#### Validações
+
+- Data inicial posterior à final retorna HTTP 400.
+- Credenciais ausentes ou inválidas retornam HTTP 401.
+- Exportação bem-sucedida retorna HTTP 200.
+
+#### Testes
+
+Foram implementados quatro testes unitários com
+JUnit e Mockito, cobrindo:
+
+- Exportação de transações aprovadas.
+- Exportação de transações rejeitadas.
+- Tratamento de caracteres especiais.
+- Exportação sem transações.
+
+A suíte automatizada do MS2 foi executada com sucesso.
+
+O endpoint também foi validado no Postman.
+O download e a abertura do arquivo no Excel foram testados.
 
 ### Atualização de saldo no saque
 
