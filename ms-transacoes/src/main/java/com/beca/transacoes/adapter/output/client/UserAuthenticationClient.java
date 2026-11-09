@@ -1,7 +1,9 @@
 package com.beca.transacoes.adapter.output.client;
 
 import com.beca.transacoes.adapter.output.client.dto.UserAuthenticationResponse;
+import com.beca.transacoes.core.transacao.port.output.UserLookupPort;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -14,7 +16,7 @@ import java.net.http.HttpClient;
 import java.time.Duration;
 
 @Component
-public class UserAuthenticationClient {
+public class UserAuthenticationClient implements UserLookupPort {
 
     private final RestClient restClient;
 
@@ -63,4 +65,27 @@ public class UserAuthenticationClient {
             );
         }
     }
+
+    @Override
+    public boolean userExists(Long id, String authorization) {
+        try {
+            restClient.get()
+                    .uri("/users/{id}", id)
+                    .header(HttpHeaders.AUTHORIZATION, authorization)
+                    .retrieve()
+                    .toBodilessEntity();
+
+            return true;
+
+        } catch (HttpClientErrorException.NotFound exception) {
+            return false;
+
+        } catch (RestClientException exception) {
+            throw new AuthenticationServiceException(
+                    "Unable to verify destination user",
+                    exception
+            );
+        }
+    }
+
 }

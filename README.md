@@ -199,3 +199,49 @@ O rollback do banco não desfaz alterações já realizadas
 no MockAPI. Uma solução de compensação ou reconciliação
 seria necessária para garantir consistência completa.
 
+
+### Transferência entre contas (MS2)
+
+A transferência permite enviar um valor de uma conta para outra.
+
+Quando a transferência é aprovada:
+- A transação é registrada no banco de dados.
+- O valor é descontado da conta de origem no MockAPI.
+- O mesmo valor é adicionado à conta de destino.
+
+Quando a transferência é rejeitada:
+- A transação é registrada como REJECTED.
+- Os saldos das contas não são alterados.
+
+#### Tratamento de falhas
+
+Se o crédito na conta de destino falhar:
+- O sistema tenta devolver o valor à conta de origem.
+- O erro original é preservado.
+- O @Transactional permite reverter a gravação no PostgreSQL.
+
+Se a devolução também falhar, os dois erros são preservados
+para facilitar a investigação.
+
+#### Testes
+
+Foram implementados testes unitários com JUnit e Mockito
+e teste de integração utilizando H2.
+
+Os testes verificam:
+- Transferências aprovadas e rejeitadas.
+- Atualização dos saldos de origem e destino.
+- Tentativa de devolução em caso de falha.
+- Rollback do registro no banco de dados.
+- Preservação dos erros de crédito e devolução.
+
+#### Limitação conhecida
+
+O PostgreSQL e o MockAPI são sistemas independentes.
+
+O @Transactional não desfaz alterações feitas no MockAPI.
+A compensação também pode falhar.
+
+Portanto, a implementação não garante atomicidade entre as
+duas contas. Em um ambiente de produção, seriam necessários
+mecanismos adicionais de controle, reconciliação e recuperação.
