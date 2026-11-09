@@ -57,4 +57,20 @@ public class TransactionPersistenceAdapter implements TransactionRepositoryPort 
 
         return transactions;
     }
+
+    @Override
+    public List<Transaction> findByUserId(Long userId) {
+
+        List<TransactionEntity> entities =
+                repository.findByUserIdOrderByOccurredAtDesc(userId);
+
+        List<Transaction> transactions = new ArrayList<>();
+
+        for (TransactionEntity entity : entities) {
+            transactions.add(entity.toDomain());
+        }
+
+        return transactions;
+    }
+
 }

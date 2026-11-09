@@ -122,6 +122,27 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(403).body(response);
     }
 
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ValidationErrorResponse> handleIllegalArgument(
+            IllegalArgumentException exception) {
+
+        List<FieldValidationError> errors = new ArrayList<>();
+
+        errors.add(new FieldValidationError(
+                "request",
+                exception.getMessage()
+        ));
+
+        ValidationErrorResponse response = new ValidationErrorResponse(
+                400,
+                "Invalid request data",
+                errors
+        );
+
+        return ResponseEntity.badRequest().body(response);
+    }
+
+
     public record FieldValidationError(
             String field,
             String message
