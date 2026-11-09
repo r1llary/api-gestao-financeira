@@ -174,3 +174,28 @@ Testes unitários cobrem a criação do depósito aprovado no serviço,
 o uso do ID do usuário autenticado no controller e a resposta 201.
 
 
+### Atualização de saldo no saque
+
+Quando um saque é aprovado, o MS2 desconta o valor
+do saldo da conta no MockAPI.
+
+Regras:
+- Saques aprovados descontam o saldo.
+- Saques rejeitados não alteram o saldo.
+- Falhas na validação impedem o salvamento.
+- Falhas no salvamento não movimentam o saldo.
+
+### Testes de consistência
+
+Foram adicionados testes unitários com JUnit e Mockito
+e um teste de integração com banco H2 em memória.
+
+O teste de integração verifica o rollback da gravação
+quando o MockAPI apresenta uma falha.
+
+Limitação:
+O PostgreSQL e o MockAPI são sistemas independentes.
+O rollback do banco não desfaz alterações já realizadas
+no MockAPI. Uma solução de compensação ou reconciliação
+seria necessária para garantir consistência completa.
+
