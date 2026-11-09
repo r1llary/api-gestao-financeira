@@ -3,10 +3,12 @@ package com.beca.transacoes.config;
 import com.beca.transacoes.core.conta.port.input.AccountUseCase;
 import com.beca.transacoes.core.conta.port.output.AccountGatewayPort;
 import com.beca.transacoes.core.conta.service.AccountService;
+import com.beca.transacoes.core.transacao.port.input.PurchaseUseCase;
 import com.beca.transacoes.core.transacao.port.input.TransferUseCase;
 import com.beca.transacoes.core.transacao.port.input.WithdrawalUseCase;
 import com.beca.transacoes.core.transacao.port.output.TransactionRepositoryPort;
 import com.beca.transacoes.core.transacao.port.output.UserLookupPort;
+import com.beca.transacoes.core.transacao.service.PurchaseService;
 import com.beca.transacoes.core.transacao.service.TransactionValidationService;
 import com.beca.transacoes.core.transacao.service.TransferService;
 import com.beca.transacoes.core.transacao.service.WithdrawalService;
@@ -56,4 +58,18 @@ public class AccountConfig {
                 accountGateway
         );
     }
+
+    @Bean
+    public PurchaseUseCase purchaseUseCase(
+            TransactionRepositoryPort repository,
+            TransactionValidationService validationService,
+            AccountGatewayPort accountGateway) {
+
+        return new PurchaseService(
+                repository,
+                validationService,
+                accountGateway
+        );
+    }
+
 }
