@@ -46,12 +46,14 @@ public class AccountConfig {
     public TransferUseCase transferUseCase(
             TransactionRepositoryPort repository,
             TransactionValidationService validationService,
-            UserLookupPort userLookupPort) {
+            UserLookupPort userLookupPort,
+            AccountGatewayPort accountGateway) {
 
         return new TransferService(
                 repository,
                 validationService,
-                userLookupPort
+                userLookupPort,
+                accountGateway
         );
     }
 }

@@ -7,6 +7,7 @@ import com.beca.transacoes.config.AccountConfig;
 import com.beca.transacoes.core.conta.model.Account;
 import com.beca.transacoes.core.conta.port.output.AccountGatewayPort;
 import com.beca.transacoes.core.transacao.port.input.WithdrawalUseCase;
+import com.beca.transacoes.core.transacao.port.output.UserLookupPort;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +41,9 @@ class WithdrawalIntegrationTest {
 
     @MockitoBean
     private AccountGatewayPort accountGateway;
+
+    @MockitoBean
+    private UserLookupPort userLookupPort;
 
     @Test
     void shouldRollbackWhenMockApiFails() {
