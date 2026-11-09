@@ -1,10 +1,11 @@
+
 package com.beca.transacoes.core.transacao.service;
 
+import com.beca.transacoes.core.transacao.exception.TransactionAccessDeniedException;
+import com.beca.transacoes.core.transacao.exception.TransactionNotFoundException;
 import com.beca.transacoes.core.transacao.model.Transaction;
 import com.beca.transacoes.core.transacao.port.input.GetTransactionUseCase;
 import com.beca.transacoes.core.transacao.port.output.TransactionRepositoryPort;
-
-import java.util.NoSuchElementException;
 
 public class GetTransactionService implements GetTransactionUseCase {
 
@@ -20,11 +21,11 @@ public class GetTransactionService implements GetTransactionUseCase {
         Transaction transaction = repository.findById(id);
 
         if (transaction == null) {
-            throw new NoSuchElementException("Transaction not found");
+            throw new TransactionNotFoundException("Transaction not found");
         }
 
         if (!transaction.getUserId().equals(userId)) {
-            throw new SecurityException("Access denied");
+            throw new TransactionAccessDeniedException("Access denied");
         }
 
         return transaction;
