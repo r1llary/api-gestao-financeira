@@ -107,4 +107,32 @@ class ExpenseSummaryServiceTest {
                         ? "Rejected for test" : null
         );
     }
+
+
+    @Test
+    void shouldReturnZeroWhenNoExpensesExist() {
+
+        // Arrange
+        ListTransactionsUseCase listUseCase =
+                mock(ListTransactionsUseCase.class);
+
+        ExpenseSummaryService service =
+                new ExpenseSummaryService(listUseCase);
+
+        LocalDate start = LocalDate.of(2026, 11, 1);
+        LocalDate end = LocalDate.of(2026, 11, 30);
+
+        when(listUseCase.list(6L, start, end, null))
+                .thenReturn(List.of());
+
+        // Act
+        ExpenseSummary result = service.summarize(6L, start, end);
+
+        // Assert
+        assertEquals(BigDecimal.ZERO, result.totalAmount());
+        assertTrue(result.categories().isEmpty());
+
+        verify(listUseCase).list(6L, start, end, null);
+    }
+
 }
