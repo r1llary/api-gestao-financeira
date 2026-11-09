@@ -1,6 +1,7 @@
 
 package com.beca.transacoes.adapter.input.rest;
 
+import com.beca.transacoes.adapter.input.rest.dto.TransactionResponse;
 import com.beca.transacoes.adapter.input.security.AuthenticatedUser;
 import com.beca.transacoes.core.cambio.model.ConversionResult;
 import com.beca.transacoes.core.cambio.service.ExchangeConversionService;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -72,7 +74,7 @@ public class GetTransactionController {
     }
 
     @GetMapping
-    public List<Transaction> list(
+    public List<TransactionResponse> list(
             @AuthenticationPrincipal AuthenticatedUser user,
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
@@ -85,11 +87,36 @@ public class GetTransactionController {
             @RequestParam(required = false)
             TransactionType type) {
 
-        return listUseCase.list(
+        // Busca as transacoes do usuario
+        List<Transaction> transactions = listUseCase.list(
                 user.id(),
                 startDate,
                 endDate,
                 type
         );
+
+        // Cria uma lista de DTOs
+        List<TransactionResponse> responses = new ArrayList<>();
+
+        // Converte cada transacao em um DTO
+        for (Transaction transaction : transactions) {
+
+            TransactionResponse response = new TransactionResponse(
+                    transaction.getId(),
+                    transaction.getUserId(),
+                    transaction.getAmount(),
+                    transaction.getType(),
+                    transaction.getOccurredAt(),
+                    transaction.getDescription(),
+                    transaction.getCategory(),
+                    transaction.getStatus(),
+                    transaction.getDestinationUserId(),
+                    transaction.getRejectionReason()
+            );
+
+            responses.add(response);
+        }
+
+        return responses;
     }
 }

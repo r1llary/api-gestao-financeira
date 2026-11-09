@@ -1,11 +1,11 @@
 package com.beca.transacoes.core.transacao.service;
 
+import com.beca.transacoes.core.transacao.exception.TransactionAccessDeniedException;
+import com.beca.transacoes.core.transacao.exception.TransactionNotFoundException;
 import com.beca.transacoes.core.transacao.model.Transaction;
 import com.beca.transacoes.core.transacao.port.output.TransactionRepositoryPort;
 
 import org.junit.jupiter.api.Test;
-
-import java.util.NoSuchElementException;
 
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -25,8 +25,7 @@ class GetTransactionServiceTest {
 
         when(repository.findById(999L)).thenReturn(null);
 
-        assertThrows(NoSuchElementException.class,
-                () -> service.getById(999L, 6L));
+        assertThrows(TransactionNotFoundException.class, () -> service.getById(999L, 6L));
     }
 
     @Test
@@ -62,7 +61,6 @@ class GetTransactionServiceTest {
         when(transaction.getUserId()).thenReturn(7L);
         when(repository.findById(1L)).thenReturn(transaction);
 
-        assertThrows(SecurityException.class,
-                () -> service.getById(1L, 6L));
+        assertThrows(TransactionAccessDeniedException.class, () -> service.getById(1L, 6L));
     }
 }

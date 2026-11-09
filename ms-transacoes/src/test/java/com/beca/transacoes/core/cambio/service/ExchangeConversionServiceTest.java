@@ -105,4 +105,30 @@ class ExchangeConversionServiceTest {
         assertTrue(result.available());
     }
 
+    @Test
+    void shouldRejectInvalidCurrency() {
+
+        // Arrange
+        ExchangeRateGatewayPort gateway =
+                mock(ExchangeRateGatewayPort.class);
+
+        ExchangeConversionService service =
+                new ExchangeConversionService(gateway);
+
+        LocalDate date = LocalDate.of(2026, 11, 9);
+
+        // Act
+        assertThrows(IllegalArgumentException.class, () ->
+                service.convert(
+                        new BigDecimal("100.00"),
+                        "GBP",
+                        date
+                )
+        );
+
+        // Assert
+        verifyNoInteractions(gateway);
+    }
+
+
 }
