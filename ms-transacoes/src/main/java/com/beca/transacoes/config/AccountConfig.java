@@ -32,31 +32,42 @@ public class AccountConfig {
     @Bean
     public WithdrawalUseCase withdrawalUseCase(
             TransactionRepositoryPort repository,
-            TransactionValidationService validationService
-    ){
-        return new WithdrawalService(repository, validationService);
+            TransactionValidationService validationService,
+            AccountGatewayPort accountGateway
+    ) {
+        return new WithdrawalService(
+                repository,
+                validationService,
+                accountGateway
+        );
     }
-
 
     @Bean
     public TransferUseCase transferUseCase(
             TransactionRepositoryPort repository,
             TransactionValidationService validationService,
-            UserLookupPort userLookupPort) {
+            UserLookupPort userLookupPort,
+            AccountGatewayPort accountGateway) {
 
         return new TransferService(
                 repository,
                 validationService,
-                userLookupPort
+                userLookupPort,
+                accountGateway
         );
     }
 
     @Bean
     public PurchaseUseCase purchaseUseCase(
             TransactionRepositoryPort repository,
-            TransactionValidationService validationService) {
+            TransactionValidationService validationService,
+            AccountGatewayPort accountGateway) {
 
-        return new PurchaseService(repository, validationService);
+        return new PurchaseService(
+                repository,
+                validationService,
+                accountGateway
+        );
     }
 
 

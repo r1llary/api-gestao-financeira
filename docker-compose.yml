@@ -1,20 +1,25 @@
+
 services:
 
+  # MS1 - Users
   ms-usuarios:
     build: ./ms-usuarios
     ports:
       - "8080:8080"
+
     environment:
       DB_URL: jdbc:postgresql://users-db:5432/${USERS_DB_NAME}
       DB_USERNAME: ${USERS_DB_USER}
       DB_PASSWORD: ${USERS_DB_PASSWORD}
 
     depends_on:
-      - users-db
+      users-db:
+        condition: service_healthy
+
     networks:
       - users-network
 
-  # Banco de dados do MS1 - Usuários
+  # MS1 database
   users-db:
     image: postgres:17
     restart: unless-stopped
@@ -30,27 +35,40 @@ services:
     volumes:
       - users_data:/var/lib/postgresql/data
 
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
     networks:
       - users-network
 
-
+  # MS2 - Transactions
   ms-transacoes:
     build: ./ms-transacoes
     ports:
       - "8081:8081"
+
     environment:
       DB_URL: jdbc:postgresql://transactions-db:5432/${TRANSACTIONS_DB_NAME}
       DB_USERNAME: ${TRANSACTIONS_DB_USER}
       DB_PASSWORD: ${TRANSACTIONS_DB_PASSWORD}
       USERS_SERVICE_URL: http://ms-usuarios:8080
       ACCOUNTS_SERVICE_URL: ${ACCOUNTS_SERVICE_URL}
+
     depends_on:
-      - transactions-db
+      transactions-db:
+        condition: service_healthy
+      ms-usuarios:
+        condition: service_started
+
     networks:
       - transactions-network
       - users-network
 
-  # Banco de dados do MS2 - Transações
+  # MS2 database
   transactions-db:
     image: postgres:17
     restart: unless-stopped
@@ -60,12 +78,18 @@ services:
       POSTGRES_USER: ${TRANSACTIONS_DB_USER}
       POSTGRES_PASSWORD: ${TRANSACTIONS_DB_PASSWORD}
 
-
     ports:
       - "127.0.0.1:5434:5432"
 
     volumes:
       - transactions_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
     networks:
       - transactions-network

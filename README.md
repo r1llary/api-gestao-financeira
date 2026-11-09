@@ -174,3 +174,107 @@ Testes unitários cobrem a criação do depósito aprovado no serviço,
 o uso do ID do usuário autenticado no controller e a resposta 201.
 
 
+### Atualização de saldo no saque
+
+Quando um saque é aprovado, o MS2 desconta o valor
+do saldo da conta no MockAPI.
+
+Regras:
+- Saques aprovados descontam o saldo.
+- Saques rejeitados não alteram o saldo.
+- Falhas na validação impedem o salvamento.
+- Falhas no salvamento não movimentam o saldo.
+
+### Testes de consistência
+
+Foram adicionados testes unitários com JUnit e Mockito
+e um teste de integração com banco H2 em memória.
+
+O teste de integração verifica o rollback da gravação
+quando o MockAPI apresenta uma falha.
+
+Limitação:
+O PostgreSQL e o MockAPI são sistemas independentes.
+O rollback do banco não desfaz alterações já realizadas
+no MockAPI. Uma solução de compensação ou reconciliação
+seria necessária para garantir consistência completa.
+
+
+### Transferência entre contas (MS2)
+
+A transferência permite enviar um valor de uma conta para outra.
+
+Quando a transferência é aprovada:
+- A transação é registrada no banco de dados.
+- O valor é descontado da conta de origem no MockAPI.
+- O mesmo valor é adicionado à conta de destino.
+
+Quando a transferência é rejeitada:
+- A transação é registrada como REJECTED.
+- Os saldos das contas não são alterados.
+
+#### Tratamento de falhas
+
+Se o crédito na conta de destino falhar:
+- O sistema tenta devolver o valor à conta de origem.
+- O erro original é preservado.
+- O @Transactional permite reverter a gravação no PostgreSQL.
+
+Se a devolução também falhar, os dois erros são preservados
+para facilitar a investigação.
+
+#### Testes
+
+Foram implementados testes unitários com JUnit e Mockito
+e teste de integração utilizando H2.
+
+Os testes verificam:
+- Transferências aprovadas e rejeitadas.
+- Atualização dos saldos de origem e destino.
+- Tentativa de devolução em caso de falha.
+- Rollback do registro no banco de dados.
+- Preservação dos erros de crédito e devolução.
+
+#### Limitação conhecida
+
+O PostgreSQL e o MockAPI são sistemas independentes.
+
+O @Transactional não desfaz alterações feitas no MockAPI.
+A compensação também pode falhar.
+
+Portanto, a implementação não garante atomicidade entre as
+duas contas. Em um ambiente de produção, seriam necessários
+mecanismos adicionais de controle, reconciliação e recuperação.
+
+
+### Compra (Purchase) — MS2
+
+A funcionalidade de compra permite registrar despesas
+e descontar o valor do saldo do usuário.
+
+Regras:
+- Compras aprovadas descontam o valor do saldo no MockAPI.
+- Compras rejeitadas não alteram o saldo.
+- Falhas ao salvar a transação impedem a atualização do saldo.
+- Falhas na atualização do saldo propagam um erro.
+
+#### Testes
+
+Foram implementados testes unitários com JUnit e Mockito
+e um teste de integração utilizando H2.
+
+Os testes verificam:
+- Compra aprovada com desconto no saldo.
+- Compra rejeitada por limite excedido.
+- Falha no salvamento da transação.
+- Falha na comunicação com o MockAPI.
+- Rollback do registro no banco de dados.
+
+#### Limitação conhecida
+
+O @Transactional permite reverter alterações no banco
+quando ocorre uma exceção, mas não desfaz alterações
+já realizadas no MockAPI.
+
+Por isso, ainda existe risco de inconsistência entre
+o registro da compra e o saldo externo.
