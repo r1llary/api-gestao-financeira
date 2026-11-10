@@ -1,10 +1,13 @@
+
 package com.beca.transacoes.adapter.input.rest;
 
 import com.beca.transacoes.adapter.input.security.AuthenticatedUser;
 import com.beca.transacoes.core.transacao.model.Transaction;
 import com.beca.transacoes.core.transacao.model.TransactionStatus;
 import com.beca.transacoes.core.transacao.port.input.WithdrawalUseCase;
-import com.beca.transacoes.core.transacao.service.WithdrawalService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -26,6 +29,17 @@ public class WithdrawalController {
         this.withdrawalService = withdrawalService;
     }
 
+    @Operation(
+            summary = "Registrar saque",
+            description = "Registra um saque para o usuário autenticado. "
+                    + "A operação pode ser aprovada ou rejeitada conforme o saldo e os limites."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Saque registrado com status APPROVED ou REJECTED"),
+            @ApiResponse(responseCode = "400", description = "Dados inválidos"),
+            @ApiResponse(responseCode = "401", description = "Usuário não autenticado"),
+            @ApiResponse(responseCode = "503", description = "Serviço de autenticação indisponível")
+    })
     @PostMapping("/withdrawals")
     public ResponseEntity<WithdrawalResponse> withdraw(
             @Valid @RequestBody WithdrawalRequest request,

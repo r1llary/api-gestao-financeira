@@ -1,3 +1,4 @@
+
 package com.beca.transacoes.adapter.input.rest;
 
 import com.beca.transacoes.adapter.input.rest.dto.DepositRequestDTO;
@@ -5,6 +6,9 @@ import com.beca.transacoes.adapter.input.rest.dto.DepositResponseDTO;
 import com.beca.transacoes.adapter.input.security.AuthenticatedUser;
 import com.beca.transacoes.core.transacao.model.Transaction;
 import com.beca.transacoes.core.transacao.port.input.DepositUseCase;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +28,16 @@ public class DepositController {
         this.depositUseCase = depositUseCase;
     }
 
+    @Operation(
+            summary = "Registrar depósito",
+            description = "Registra um depósito para o usuário autenticado."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Depósito registrado com sucesso"),
+            @ApiResponse(responseCode = "400", description = "Dados inválidos"),
+            @ApiResponse(responseCode = "401", description = "Usuário não autenticado"),
+            @ApiResponse(responseCode = "503", description = "Serviço de autenticação indisponível")
+    })
     @PostMapping
     public ResponseEntity<DepositResponseDTO> deposit(
             @Valid @RequestBody DepositRequestDTO request,
