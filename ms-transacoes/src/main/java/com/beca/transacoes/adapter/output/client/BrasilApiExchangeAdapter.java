@@ -10,6 +10,7 @@ import org.springframework.web.client.RestClient;
 
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.ZoneId;
 
 @Component
 public class BrasilApiExchangeAdapter implements ExchangeRateGatewayPort {
@@ -35,9 +36,16 @@ public class BrasilApiExchangeAdapter implements ExchangeRateGatewayPort {
     @Override
     public ExchangeRate getRate(String currency, LocalDate date) {
 
+        LocalDate today = LocalDate.now(ZoneId.of("America/Sao_Paulo"));
+        LocalDate queryDate = date;
+
+        if (!date.isBefore(today)) {
+            queryDate = today.minusDays(1);
+        }
+
         BrasilApiExchangeResponse response = client.get()
                 .uri("/api/cambio/v1/cotacao/{currency}/{date}",
-                        currency, date)
+                        currency, queryDate)
                 .retrieve()
                 .body(BrasilApiExchangeResponse.class);
 
