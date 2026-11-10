@@ -553,7 +553,6 @@ já realizadas no MockAPI.
 Por isso, ainda existe risco de inconsistência entre
 o registro da compra e o saldo externo.
 
-
 ### Resumo de despesas por dia
 
 O MS2 permite consultar as despesas do usuário autenticado,
@@ -627,3 +626,77 @@ Os 69 testes automatizados do MS2 passaram com sucesso.
 
 O endpoint também foi validado no Postman.
 
+## Cobertura de testes — JaCoCo (MS2)
+
+O MS2 utiliza JUnit, Mockito e JaCoCo para executar
+os testes automatizados e medir a cobertura do código.
+
+### Gerar o relatório
+
+Na pasta `ms-transacoes`, execute:
+
+```powershell
+.\mvnw.cmd clean verify
+```
+
+O comando compila o projeto, executa os testes e
+gera o relatório de cobertura.
+
+### Consultar o relatório
+
+O relatório HTML fica disponível em:
+
+`ms-transacoes/target/site/jacoco/index.html`
+
+O JaCoCo também gera um arquivo CSV em:
+
+`ms-transacoes/target/site/jacoco/jacoco.csv`
+
+### Resultados da cobertura
+
+Na medição realizada em 09/11/2026, os 11 serviços
+de negócio analisados apresentaram:
+
+- 194 linhas cobertas.
+- 11 linhas não cobertas.
+- 205 linhas no total.
+- Cobertura conjunta de linhas: 94,6%.
+
+Destaques:
+
+| Serviço | Cobertura de linhas |
+| --- | ---: |
+| AccountValidator | 96% |
+| TransactionValidationService | 100% |
+| ExchangeConversionService | 85,7% |
+| TransferService | 100% |
+| WithdrawalService | 100% |
+| PurchaseService | 100% |
+| ExpenseSummaryService | 84,8% |
+
+Os resultados consideram os serviços de negócio
+presentes na branch `feature/ms2-jacoco-coverage`.
+
+A cobertura apresentada não representa a cobertura
+global do MS2. Controllers, DTOs, configurações e
+adapters também aparecem no relatório geral.
+
+### Cenários testados
+
+Os testes automatizados verificam:
+
+- Saldo suficiente e insuficiente.
+- Limite por transação.
+- Limite diário.
+- Aprovação e rejeição de operações.
+- Cálculo dos gastos diários.
+- Conversão de BRL para USD e EUR.
+- Tratamento de indisponibilidade da API de câmbio.
+- Autenticação válida e inválida.
+- Falhas de comunicação com o MS1.
+
+Os testes utilizam mocks e simulações locais para
+evitar dependência de serviços externos reais.
+
+A cobertura é acompanhada como indicador de qualidade,
+sem exigir 100% das linhas do projeto.
