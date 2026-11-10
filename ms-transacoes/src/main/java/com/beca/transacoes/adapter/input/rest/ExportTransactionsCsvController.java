@@ -25,7 +25,7 @@ public class ExportTransactionsCsvController {
         this.useCase = useCase;
     }
 
-    @GetMapping("/export/csv")
+    @GetMapping(value = "/export/csv", produces = "text/csv")
     public ResponseEntity<byte[]> exportCsv(
             @AuthenticationPrincipal AuthenticatedUser user,
 

@@ -5,12 +5,13 @@ import com.beca.transacoes.adapter.input.security.AuthenticatedUser;
 import com.beca.transacoes.core.transacao.model.Transaction;
 import com.beca.transacoes.core.transacao.model.TransactionStatus;
 import com.beca.transacoes.core.transacao.port.input.PurchaseUseCase;
-
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -28,6 +29,18 @@ public class PurchaseController {
         this.purchaseUseCase = purchaseUseCase;
     }
 
+    @Operation(
+            summary = "Registrar compra",
+            description = "Registra uma compra para o usuário autenticado. "
+                    + "A operação pode ser aprovada ou rejeitada "
+                    + "conforme o saldo e os limites da conta."
+    )
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Compra registrada com status APPROVED ou REJECTED"),
+            @ApiResponse(responseCode = "400", description = "Dados inválidos"),
+            @ApiResponse(responseCode = "401", description = "Usuário não autenticado"),
+            @ApiResponse(responseCode = "503", description = "Serviço de autenticação indisponível")
+    })
     @PostMapping("/purchases")
     public ResponseEntity<PurchaseResponse> purchase(
             @Valid @RequestBody PurchaseRequest request,
