@@ -319,6 +319,74 @@ por categoria e exclusão de transações não elegíveis.
 O endpoint também foi validado no Postman.
 
 
+### Resumo de despesas por mês
+
+O MS2 permite consultar as despesas do usuário
+autenticado, agrupadas por mês e ano.
+
+#### Endpoint
+
+GET /transactions/expenses/monthly
+
+Requer autenticação HTTP Basic.
+
+Sem informar datas, a consulta considera o mês atual.
+
+Também é possível informar um período:
+
+GET /transactions/expenses/monthly?startDate=2026-11-01&endDate=2026-11-30
+
+#### Regras
+
+- Considera somente transações APPROVED.
+- Inclui saques (WITHDRAWAL).
+- Inclui transferências enviadas (TRANSFER).
+- Inclui compras (PURCHASE).
+- Exclui depósitos e transações rejeitadas.
+- Retorna somente despesas do usuário autenticado.
+- Agrupa os valores por mês e ano.
+- Utiliza o fuso horário America/Sao_Paulo.
+- Ordena os meses cronologicamente.
+
+#### Exemplo de resposta
+
+```json
+{
+  "startDate": "2026-11-01",
+  "endDate": "2026-11-30",
+  "totalAmount": 610.00,
+  "months": [
+    {
+      "month": "2026-11",
+      "amount": 610.00
+    }
+  ]
+}
+```
+
+#### Validações
+
+- A data inicial não pode ser posterior à data final.
+- Se uma data for informada, a outra também será obrigatória.
+- Períodos inválidos retornam HTTP 400.
+- Credenciais ausentes ou inválidas retornam HTTP 401.
+- Sem despesas, retorna total zero e lista vazia.
+
+#### Testes
+
+Foram implementados quatro testes unitários com JUnit e Mockito:
+
+- Agrupamento de despesas por mês.
+- Exclusão de depósitos e transações rejeitadas.
+- Mudança de mês e ano considerando o fuso horário.
+- Consulta sem despesas.
+
+Os testes automatizados do MS2 foram executados
+com sucesso: 69 testes, nenhuma falha.
+
+O endpoint também foi validado com requisições HTTP,
+incluindo consultas com e sem datas, erro 400 e
+autenticação obrigatória com retorno 401.
 
 
 ### Atualização de saldo no saque
