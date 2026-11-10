@@ -96,4 +96,10 @@ public class AccountConfig {
         return new MonthlyExpenseSummaryService(listTransactionsUseCase);
     }
 
+    @Bean
+    public ExportTransactionsCsvUseCase exportTransactionsCsvUseCase(
+            ListTransactionsUseCase listTransactionsUseCase) {
+
+        return new ExportTransactionsCsvService(listTransactionsUseCase);
+    }
 }
