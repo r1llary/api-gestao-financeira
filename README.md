@@ -1,108 +1,282 @@
-# api-gestao-financeira
-API REST para gestão financeira de múltiplos usuários, desenvolvida com Java, Spring Boot, PostgreSQL e Docker, permitindo gerenciar usuários,
-transações financeiras, saldos, conversão de moedas e análise de despesas.
+# API Gestão Financeira
 
-## Executar com Docker Compose
+API REST para gestão financeira de múltiplos usuários, desenvolvida com Java 25, Spring Boot, PostgreSQL e Docker.
 
-Na raiz do projeto, copie o `.env.example` para `.env` e preencha as variáveis dos dois bancos. Mantenha o `.env` fora do Git.
+O projeto utiliza dois microsserviços:
 
-Com o Docker em execução, rode na raiz do projeto:
+- **MS1 — Usuários:** responsável pelo gerenciamento e autenticação dos usuários.
+- **MS2 — Transações:** responsável pelas operações financeiras, consulta de saldos, conversão de moedas, relatórios de despesas e exportação CSV.
+
+O projeto utiliza arquitetura hexagonal, autenticação HTTP Basic, testes automatizados e Docker Compose.
+
+---
+
+## 1. Tecnologias utilizadas
+
+- Java 25
+- Spring Boot
+- Spring Web
+- Spring Data JPA
+- Spring Security
+- Bean Validation
+- PostgreSQL 17
+- Docker e Docker Compose
+- JUnit
+- Mockito
+- JaCoCo
+- H2 para testes de integração
+- Springdoc OpenAPI e Swagger UI
+- Maven
+- Postman
+- MockAPI
+- BrasilAPI
+
+---
+
+## 2. Estrutura do projeto
+
+O projeto é dividido em dois microsserviços independentes.
+
+### MS1 — Serviço de usuários
+
+Responsável por:
+
+- Cadastrar usuários.
+- Listar usuários.
+- Consultar usuários por ID.
+- Atualizar dados dos usuários.
+- Excluir usuários.
+- Importar usuários por arquivo CSV.
+- Autenticar usuários utilizando HTTP Basic.
+
+### MS2 — Serviço de transações
+
+Responsável por:
+
+- Registrar depósitos.
+- Realizar saques.
+- Realizar transferências entre contas.
+- Registrar compras.
+- Consultar transações financeiras.
+- Consultar o saldo do usuário.
+- Validar saldo e limites financeiros.
+- Converter valores de BRL para USD e EUR.
+- Consultar despesas por categoria.
+- Consultar despesas por dia.
+- Consultar despesas por mês.
+- Exportar transações em CSV.
+- Utilizar autenticação integrada ao MS1.
+
+---
+
+## 3. Executar com Docker Compose
+
+### Pré-requisitos
+
+- Docker com Docker Compose.
+- Portas necessárias disponíveis.
+- Arquivo `.env` configurado.
+
+Na raiz do projeto, copie o arquivo `.env.example` para `.env` e preencha as variáveis dos dois bancos de dados.
+
+O arquivo `.env` contém informações sensíveis e não deve ser enviado ao GitHub.
+
+### Iniciar o ambiente
+
+Na raiz do projeto, execute:
 
 ```bash
 docker compose up --build -d
 ```
 
-O comando gera os JARs durante a construção das imagens e sobe os dois microsserviços e seus bancos PostgreSQL.
+Esse comando constrói as imagens das aplicações e inicia os dois microsserviços e seus respectivos bancos PostgreSQL.
 
-| Microsserviço | Endereço local |
+### Endereços dos microsserviços
+
+| Microsserviço | Endereço |
 | --- | --- |
-| MS1 — Usuários | `http://localhost:8080` |
-| MS2 — Transações | `http://localhost:8081` |
+| MS1 — Usuários | http://localhost:8080 |
+| MS2 — Transações | http://localhost:8081 |
 
-Para conferir se os quatro serviços estão em execução, use `docker compose ps`. Para parar o ambiente preservando os dados dos bancos, use `docker compose down`.
+### Verificar os containers
 
-## MS1 - Serviço de usuários
+```bash
+docker compose ps
+```
 
-Responsável pelo cadastro, consulta, atualização e exclusão de usuários, além da importação de usuários por arquivo CSV.
+O ambiente deve apresentar os microsserviços e os bancos de dados em execução.
+
+### Parar o ambiente
+
+```bash
+docker compose down
+```
+
+Esse comando para e remove os containers sem remover os volumes persistentes dos bancos.
+
+---
+
+# MS1 — Serviço de Usuários
+
+## 4. Funcionalidades do MS1
+
+O MS1 é responsável pelo gerenciamento dos usuários da aplicação.
 
 ### Tecnologias
 
 - Java 25
 - Spring Boot
 - Spring Data JPA
-- Spring Security com autenticação HTTP Basic
+- Spring Security
 - Bean Validation
-- PostgreSQL 17
+- PostgreSQL
 - JUnit e Mockito
-- Springdoc OpenAPI e Swagger UI
+- Springdoc OpenAPI
+- Swagger UI
 
 ### Arquitetura
 
-O MS1 utiliza arquitetura hexagonal:
-- core.usuario.model: modelo de domínio.
-- core.usuario.port.input: contratos dos casos de uso.
-- core.usuario.port.output: contratos de acesso à persistência.
-- core.usuario.service: regras de negócio.
-- adapter.input.rest: endpoints REST, DTOSs e tratamento de erros.
-- adapter.input.csv: leitura e importação de usuários.
-- adapter.input.security: consulta de usuários para autenticação.
-- adapter.output.persistence: integração com o banco usando JPA.
-- config: configuração e ligação dos componentes.
+O MS1 utiliza arquitetura hexagonal, separando as regras de negócio das tecnologias externas.
 
-### Endpoints
+Principais pacotes:
+
+| Pacote | Responsabilidade |
+| --- | --- |
+| `core.usuario.model` | Modelos de domínio |
+| `core.usuario.port.input` | Contratos dos casos de uso |
+| `core.usuario.port.output` | Contratos de persistência |
+| `core.usuario.service` | Regras de negócio |
+| `adapter.input.rest` | Endpoints REST, DTOs e tratamento de erros |
+| `adapter.input.csv` | Importação de usuários via CSV |
+| `adapter.input.security` | Integração com a autenticação |
+| `adapter.output.persistence` | Persistência com JPA |
+| `config` | Configuração dos componentes |
+
+---
+
+## 5. Endpoints do MS1
 
 | Método | Rota | Descrição | Autenticação |
-| ------ | ---- | --------- | ------------
-| POST | /users | Cadastrar Usuário | Pública |
-| GET | /users|Listar Usuário | Basic |
-| GET | /users/{id}| Buscar usuário por ID | Basic |
-| PUT | /users/{id}|Atualizar usuário | Basic |
-| DELETE| /users/{id} |Excluir usuário| Basic |
-| POST | /users/import | Importar arquivo CSV | Basic |
+| --- | --- | --- | --- |
+| POST | `/users` | Cadastrar usuário | Pública |
+| GET | `/users` | Listar usuários | Basic |
+| GET | `/users/{id}` | Buscar usuário por ID | Basic |
+| PUT | `/users/{id}` | Atualizar usuário | Basic |
+| DELETE | `/users/{id}` | Excluir usuário | Basic |
+| POST | `/users/import` | Importar usuários por CSV | Basic |
 
 ### Autenticação
 
-As operações protegidas utilizam o e-mail cadastrado com usuário e a senha original do cadastro.
-As senhas são armazenadas como hash BCrypt e não são incluídas nas respostas de usuários.
+As operações protegidas utilizam:
 
-### Swagger
+- E-mail do usuário cadastrado.
+- Senha original informada durante o cadastro.
 
-Com a aplicação em execução, acesse:
+As senhas são armazenadas utilizando BCrypt.
+
+Por segurança, as senhas não são retornadas nas respostas dos endpoints.
+
+### Validações
+
+O MS1 utiliza Bean Validation para validar os dados enviados nas requisições.
+
+Entre as validações estão:
+
+- Campos obrigatórios.
+- Formato do e-mail.
+- Dados inválidos.
+- Tratamento de usuários não encontrados.
+
+Os erros são tratados pela aplicação e retornados com códigos HTTP adequados.
+
+---
+
+## 6. Importação de usuários por CSV
+
+### Endpoint
+
+```http
+POST /users/import
+```
+
+Requer autenticação HTTP Basic.
+
+A requisição utiliza `multipart/form-data`, com o arquivo enviado no campo `file`.
+
+### Formato do arquivo
+
+O arquivo deve utilizar UTF-8 e conter o seguinte cabeçalho:
+
+```csv
+name,email,password
+```
+
+Exemplo:
+
+```csv
+name,email,password
+Maria Silva,maria@email.com,Senha123
+Joao Souza,joao@email.com,Senha456
+```
+
+Os exemplos de arquivos estão disponíveis em:
+
+```text
+ms-usuarios/examples
+```
+
+---
+
+## 7. Swagger do MS1
+
+Com o MS1 em execução, acesse:
+
 http://localhost:8080/swagger-ui.html
 
-Para testar operações protegidas, clique em Authorize e informe o e-mail e a senha de um usuário cadastrado.
+Para testar os endpoints protegidos:
 
-### Execução
+1. Clique em `Authorize`.
+2. Informe o e-mail de um usuário cadastrado.
+3. Informe a senha correspondente.
+4. Autorize e execute as requisições.
 
-Requisitos: Java 25 e Docker Compose iniciado.
+---
 
-Na pasta principal, copie .env.example para .env
-e preencha as variáveis.
+# MS2 — Serviço de Transações
 
-### CSV
+## 8. Funcionalidades do MS2
 
-Envie um arquivo UTF-8 para POST /users/import,
-usando autenticação Basic e multipart/form-data.
-no campo file.
+O MS2 é responsável pelas operações financeiras dos usuários, incluindo depósitos, saques, transferências e compras.
 
-Cabeçalho: name,email,password.
-Exemplos: ms-usuarios/examples
+O microsserviço também oferece consulta de transações, saldo, conversão de moedas, resumos de despesas por categoria, dia e mês, além da exportação de relatórios CSV.
 
-## MS2 - Serviço de transações
+Utiliza Java, Spring Boot, PostgreSQL, autenticação HTTP Basic integrada ao MS1 e testes automatizados com JUnit, Mockito e JaCoCo.
 
-Em desenvolvimento. Até o momento, foram validadas a compilação e a inicialização da aplicação com conexão ao PostgreSQL.
+---
 
-### Executar o MS2 pelo IntelliJ (opcional)
+## 9. Executar o MS2 pelo IntelliJ
 
-Neste modo, o banco roda no Docker e a aplicação roda pelo IntelliJ. Se o ambiente completo estiver ativo, execute `docker compose stop ms-transacoes` para liberar a porta `8081`.
+Opcionalmente, é possível executar o banco PostgreSQL pelo Docker e a aplicação diretamente pelo IntelliJ.
 
-Com `TRANSACTIONS_DB_NAME`, `TRANSACTIONS_DB_USER` e `TRANSACTIONS_DB_PASSWORD` preenchidas no `.env`, rode na raiz do projeto:
+Se o ambiente completo estiver em execução, pare o container da aplicação MS2 para liberar a porta 8081:
+
+```bash
+docker compose stop ms-transacoes
+```
+
+### Iniciar somente o banco do MS2
+
+Na raiz do projeto, execute:
 
 ```bash
 docker compose up -d transactions-db
 ```
 
-Na configuração de execução de `MsTransacoesApplication` no IntelliJ, preencha as variáveis de ambiente abaixo.
+### Configurar variáveis de ambiente
+
+No IntelliJ, abra a configuração de execução de `MsTransacoesApplication`.
+
+Configure:
 
 | Variável | Valor |
 | --- | --- |
@@ -110,40 +284,82 @@ Na configuração de execução de `MsTransacoesApplication` no IntelliJ, preenc
 | `DB_USERNAME` | Valor de `TRANSACTIONS_DB_USER` no `.env` |
 | `DB_PASSWORD` | Valor de `TRANSACTIONS_DB_PASSWORD` no `.env` |
 
-Substitua `<nome-do-banco>` pelo valor de `TRANSACTIONS_DB_NAME` e execute `MsTransacoesApplication`. O serviço usa a porta `8081`.
+Substitua `<nome-do-banco>` pelo valor configurado em `TRANSACTIONS_DB_NAME`.
 
-O Compose lê o `.env`. Para rodar pelo IntelliJ, forneça as variáveis na configuração de execução.
+O MS2 utiliza a porta:
 
-### Autenticação
+```text
+8081
+```
 
-O MS2 utiliza HTTP Basic e valida o e-mail e a senha no MS1.
+As variáveis de ambiente devem ser fornecidas na configuração de execução do IntelliJ.
 
-As requisições protegidas devem enviar as credenciais de um usuário
-cadastrado no MS1.
+---
 
-A rota GET /auth/me retorna o ID e o e-mail do usuário autenticado.
-O campo name, quando presente, corresponde ao e-mail usado no login.
+## 10. Autenticação do MS2
 
-- Credenciais válidas retornam 200.
-- Credenciais ausentes ou inválidas retornam 401.
-- Falha na comunicação com o MS1 retorna 503.
+O MS2 utiliza HTTP Basic e valida as credenciais dos usuários por meio do MS1.
 
-A URL do MS1 é configurada pela variável USERS_SERVICE_URL.
-No Docker Compose, seu valor é http://ms-usuarios:8080.
-Para execução local pelo IntelliJ, o endereço padrão é
-http://localhost:8080.
+As requisições protegidas precisam enviar:
 
-O acesso às transações de cada usuário será validado junto
-à implementação das rotas financeiras.
+- E-mail de um usuário cadastrado.
+- Senha correspondente.
 
-### Depósito
+### Endpoint de autenticação
 
-POST http://localhost:8081/transactions
+```http
+GET /auth/me
+```
 
-Exige HTTP Basic com e-mail e senha de um usuário cadastrado no MS1.
-O dono do depósito é identificado pela autenticação.
+O endpoint retorna informações do usuário autenticado, incluindo seu ID e e-mail.
 
-Exemplo de corpo da requisição:
+Quando presente, o campo `name` corresponde ao e-mail utilizado na autenticação.
+
+### Respostas
+
+| HTTP | Significado |
+| --- | --- |
+| 200 | Credenciais válidas |
+| 401 | Credenciais ausentes ou inválidas |
+| 503 | Serviço de autenticação MS1 indisponível |
+
+### Configuração
+
+A URL do MS1 é configurada pela variável:
+
+```text
+USERS_SERVICE_URL
+```
+
+No Docker Compose:
+
+```text
+http://ms-usuarios:8080
+```
+
+Na execução local pelo IntelliJ:
+
+```text
+http://localhost:8080
+```
+
+As transações financeiras são associadas ao usuário autenticado.
+
+---
+
+## 11. Depósito
+
+Permite registrar um depósito financeiro para o usuário autenticado.
+
+### Endpoint
+
+```http
+POST /transactions
+```
+
+Requer autenticação HTTP Basic.
+
+### Exemplo de requisição
 
 ```json
 {
@@ -153,7 +369,9 @@ Exemplo de corpo da requisição:
 }
 ```
 
-Resposta de sucesso: HTTP 201 Created.
+### Exemplo de resposta
+
+HTTP 201 Created:
 
 ```json
 {
@@ -162,109 +380,300 @@ Resposta de sucesso: HTTP 201 Created.
 }
 ```
 
-O ID é gerado pelo banco e pode variar.
+O ID é gerado pelo banco de dados e pode variar.
 
-- O valor é obrigatório e deve ser maior que zero.
-- Descrição e categoria são obrigatórias e não podem conter apenas espaços.
-- Dados inválidos retornam 400 com uma lista dos campos e suas mensagens de validação.
-- Credenciais ausentes ou inválidas retornam 401.
-- Indisponibilidade do serviço de autenticação retorna 503.
+### Validações
 
-Testes unitários cobrem a criação do depósito aprovado no serviço,
-o uso do ID do usuário autenticado no controller e a resposta 201.
+- O valor é obrigatório.
+- O valor deve ser maior que zero.
+- Descrição e categoria são obrigatórias.
+- Descrição e categoria não podem conter somente espaços.
+- Dados inválidos retornam HTTP 400.
+- Credenciais inválidas retornam HTTP 401.
+- Indisponibilidade do serviço de autenticação retorna HTTP 503.
 
-### Conversão de moedas — BrasilAPI
+### Testes
 
-O MS2 permite consultar uma transação com seu valor
-original em reais (BRL) e as conversões para dólar
-(USD) e euro (EUR).
+Os testes verificam:
 
-As cotações são consultadas na BrasilAPI, utilizando
-o boletim de fechamento PTAX.
+- Criação de depósito aprovado.
+- Associação ao usuário autenticado.
+- Retorno HTTP 201.
+- Validações das requisições.
 
-#### Endpoint
+---
 
+## 12. Saque
+
+Permite retirar valores da conta do usuário.
+
+### Regras
+
+- Verifica o saldo disponível.
+- Verifica os limites financeiros.
+- Saques aprovados são registrados como `APPROVED`.
+- Saques rejeitados são registrados como `REJECTED`.
+- Saques aprovados descontam o valor do saldo no MockAPI.
+- Saques rejeitados não alteram o saldo.
+
+### Tratamento de falhas
+
+- Falhas na validação impedem a movimentação.
+- Falhas ao salvar a transação impedem a atualização do saldo.
+- Exceções durante a operação são tratadas pela aplicação.
+
+### Testes
+
+Foram implementados testes unitários com JUnit e Mockito e teste de integração utilizando H2.
+
+O teste de integração verifica o rollback da gravação quando ocorre falha na comunicação com o MockAPI.
+
+### Limitação conhecida
+
+O PostgreSQL e o MockAPI são sistemas independentes.
+
+O rollback no banco de dados não desfaz automaticamente alterações que já ocorreram no MockAPI.
+
+Uma solução de compensação ou reconciliação seria necessária para garantir maior consistência em um ambiente de produção.
+
+---
+
+## 13. Transferência entre contas
+
+Permite transferir valores entre contas.
+
+### Quando a transferência é aprovada
+
+- A transação é registrada no banco de dados.
+- O valor é descontado da conta de origem no MockAPI.
+- O mesmo valor é adicionado à conta de destino.
+
+### Quando a transferência é rejeitada
+
+- A transação é registrada como `REJECTED`.
+- Os saldos não são alterados.
+
+### Validações
+
+- Usuário de destino existente.
+- Saldo suficiente.
+- Limite por transação.
+- Limite diário.
+
+### Tratamento de falhas
+
+Se ocorrer falha ao creditar o valor na conta de destino:
+
+- O sistema tenta devolver o valor à conta de origem.
+- O erro original é preservado.
+- O `@Transactional` permite reverter a gravação no PostgreSQL.
+
+Se a devolução também falhar, os erros são preservados para investigação.
+
+### Testes
+
+Foram implementados testes unitários com JUnit e Mockito e testes de integração utilizando H2.
+
+Os cenários incluem:
+
+- Transferência aprovada.
+- Transferência rejeitada.
+- Atualização dos saldos.
+- Falha no crédito da conta de destino.
+- Tentativa de devolução do valor.
+- Rollback no banco.
+- Preservação dos erros.
+
+### Limitação conhecida
+
+O `@Transactional` não desfaz alterações realizadas no MockAPI.
+
+A compensação também pode falhar.
+
+Portanto, a implementação não garante atomicidade entre as duas contas. Em produção, seriam necessários mecanismos adicionais de controle, reconciliação e recuperação.
+
+---
+
+## 14. Compra (Purchase)
+
+Permite registrar compras e descontar os valores do saldo do usuário.
+
+### Regras
+
+- Compras aprovadas descontam o valor do saldo no MockAPI.
+- Compras rejeitadas não alteram o saldo.
+- A operação verifica os limites financeiros.
+- Falhas ao salvar a transação impedem a atualização do saldo.
+- Falhas na atualização do saldo propagam um erro.
+
+### Testes
+
+Foram implementados testes unitários e de integração utilizando JUnit, Mockito e H2.
+
+Os cenários incluem:
+
+- Compra aprovada.
+- Compra rejeitada por limite excedido.
+- Falha no salvamento da transação.
+- Falha na comunicação com o MockAPI.
+- Rollback do registro no banco.
+
+### Limitação conhecida
+
+O rollback do PostgreSQL não desfaz alterações realizadas no MockAPI.
+
+Por isso, ainda existe risco de inconsistência entre o registro da compra e o saldo externo.
+
+---
+
+## 15. Consulta de transações
+
+O MS2 permite consultar informações de transações financeiras.
+
+### Consultar transação por ID
+
+```http
 GET /transactions/{id}
+```
 
 Requer autenticação HTTP Basic.
 
 Exemplo:
 
+```http
 GET http://localhost:8081/transactions/1
+```
 
-A resposta inclui os dados originais da transação
-e os campos:
+A consulta apresenta os dados da transação e as informações de conversão de moedas, quando disponíveis.
 
-- originalCurrency: moeda original (BRL).
-- usd: conversão para dólar.
-- eur: conversão para euro.
+---
+
+## 16. Consulta de saldo
+
+Permite consultar as informações da conta do usuário autenticado.
+
+### Endpoint
+
+```http
+GET /accounts/me/balance
+```
+
+Requer autenticação HTTP Basic.
+
+As informações da conta são obtidas por meio da integração com o MockAPI.
+
+---
+
+## 17. Conversão de moedas — BrasilAPI
+
+O MS2 permite consultar o valor original de uma transação em reais (BRL) e as conversões para:
+
+- Dólar americano (USD).
+- Euro (EUR).
+
+As cotações são consultadas na BrasilAPI, utilizando os dados de câmbio disponíveis pela API.
+
+### Endpoint
+
+```http
+GET /transactions/{id}
+```
+
+### Informações retornadas
+
+A resposta inclui os dados originais da transação e os campos:
+
+- `originalCurrency`: moeda original.
+- `usd`: informações da conversão para dólar.
+- `eur`: informações da conversão para euro.
 
 Cada conversão apresenta:
 
-- currency: moeda consultada.
-- convertedAmount: valor convertido.
-- rate: cotação utilizada.
-- quoteDate: data da cotação.
-- available: disponibilidade da conversão.
+- `currency`: moeda consultada.
+- `convertedAmount`: valor convertido.
+- `rate`: cotação utilizada.
+- `quoteDate`: data da cotação.
+- `available`: disponibilidade da conversão.
 
-#### Cálculo
+### Cálculo
 
-Valor convertido = valor em BRL / cotação de venda
+```text
+Valor convertido = Valor em BRL / Cotação de venda
+```
 
-O cálculo utiliza BigDecimal e arredondamento
-HALF_UP para duas casas decimais.
+O cálculo utiliza `BigDecimal` com arredondamento `HALF_UP` para duas casas decimais.
 
-A data da transação é interpretada no fuso
-America/Sao_Paulo para consultar a cotação.
+A data da transação é interpretada no fuso horário:
 
-#### Tratamento de falhas
+```text
+America/Sao_Paulo
+```
 
-Se a BrasilAPI estiver indisponível ou não retornar
-uma cotação válida, a transação continua consultável.
+### Tratamento de falhas
 
-Nesse caso, a conversão retorna:
+Se a BrasilAPI estiver indisponível ou não retornar uma cotação válida, a consulta da transação permanece disponível.
 
-- available: false
-- convertedAmount: null
-- rate: null
-- quoteDate: null
+Nesse cenário, os dados de conversão podem retornar:
 
-Nenhuma taxa fictícia é utilizada.
+```json
+{
+  "available": false,
+  "convertedAmount": null,
+  "rate": null,
+  "quoteDate": null
+}
+```
 
-#### Configuração
+Nenhuma taxa de câmbio fictícia é utilizada.
+
+### Configuração
 
 Variável de ambiente:
 
+```text
 EXCHANGE_SERVICE_URL=https://brasilapi.com.br
+```
 
-Endpoint da BrasilAPI:
+Endpoint utilizado pela integração:
 
+```http
 GET /api/cambio/v1/cotacao/{moeda}/{data}
+```
 
-A URL é configurável e a integração possui
-timeout de conexão e de leitura.
+A integração possui timeout de conexão e leitura.
 
-A variável está documentada no .env.example
-e é repassada ao MS2 pelo Docker Compose.
+A variável está documentada no `.env.example` e é repassada ao MS2 pelo Docker Compose.
 
-#### Testes
+### Limitação conhecida
+
+A consulta de cotação para a data atual pode retornar HTTP 400 na BrasilAPI.
+
+O tratamento específico para datas atuais ou futuras precisa considerar a consulta ao dia anterior e utilizar a data efetivamente retornada pela API.
+
+Enquanto esse ajuste não estiver integrado, uma conversão referente à data atual poderá ser apresentada como indisponível.
+
+### Testes
 
 Os testes automatizados verificam:
 
 - Conversão de BRL para USD.
 - Conversão de BRL para EUR.
-- Retorno de indisponibilidade quando a API falha.
+- Tratamento de falhas na API.
+- Retorno de conversão indisponível.
 
-As conversões também foram validadas no Postman.
+A integração também foi validada no Postman.
 
-### Resumo de despesas por categoria
+---
 
-O MS2 permite consultar o total de despesas do usuário
-autenticado, agrupado por categoria.
+## 18. Resumo de despesas por categoria
 
-#### Endpoint
+Permite consultar as despesas do usuário autenticado, agrupadas por categoria.
 
+### Endpoint
+
+```http
 GET /transactions/expenses/summary
+```
 
 Requer autenticação HTTP Basic.
 
@@ -272,295 +681,67 @@ Sem informar datas, a consulta considera o mês atual.
 
 Também é possível informar um período:
 
+```http
 GET /transactions/expenses/summary?startDate=2026-11-01&endDate=2026-11-30
+```
 
-#### Regras
+### Regras
 
-- Considera somente transações APPROVED.
-- Inclui saques (WITHDRAWAL).
-- Inclui transferências enviadas (TRANSFER).
-- Inclui compras (PURCHASE).
-- Exclui depósitos e transações rejeitadas.
+- Considera somente transações `APPROVED`.
+- Inclui saques (`WITHDRAWAL`).
+- Inclui transferências enviadas (`TRANSFER`).
+- Inclui compras (`PURCHASE`).
+- Exclui depósitos.
+- Exclui transações rejeitadas.
 - Retorna somente as despesas do usuário autenticado.
 
-#### Exemplo de resposta
-
-{
-"startDate": "2026-11-01",
-"endDate": "2026-11-30",
-"totalAmount": 600.00,
-"categories": [
-{
-"category": "Cash",
-"total": 500.00
-},
-{
-"category": "Food",
-"total": 50.00
-},
-{
-"category": "Transfer",
-"total": 50.00
-}
-]
-}
-
-#### Validações
-
-- A data inicial não pode ser posterior à data final.
-- Se uma data for informada, a outra também será obrigatória.
-- Períodos inválidos retornam HTTP 400 em JSON.
-
-#### Testes
-
-Foram realizados testes unitários de agrupamento
-por categoria e exclusão de transações não elegíveis.
-
-O endpoint também foi validado no Postman.
-
-### Resumo de despesas por mês
-
-O MS2 permite consultar as despesas do usuário
-autenticado, agrupadas por mês e ano.
-
-#### Endpoint
-
-GET /transactions/expenses/monthly
-
-Requer autenticação HTTP Basic.
-
-Sem informar datas, a consulta considera o mês atual.
-
-Também é possível informar um período:
-
-GET /transactions/expenses/monthly?startDate=2026-11-01&endDate=2026-11-30
-
-#### Regras
-
-- Considera somente transações APPROVED.
-- Inclui saques (WITHDRAWAL).
-- Inclui transferências enviadas (TRANSFER).
-- Inclui compras (PURCHASE).
-- Exclui depósitos e transações rejeitadas.
-- Retorna somente despesas do usuário autenticado.
-- Agrupa os valores por mês e ano.
-- Utiliza o fuso horário America/Sao_Paulo.
-- Ordena os meses cronologicamente.
-
-#### Exemplo de resposta
+### Exemplo de resposta
 
 ```json
 {
   "startDate": "2026-11-01",
   "endDate": "2026-11-30",
-  "totalAmount": 610.00,
-  "months": [
+  "totalAmount": 600.00,
+  "categories": [
     {
-      "month": "2026-11",
-      "amount": 610.00
+      "category": "Cash",
+      "total": 500.00
+    },
+    {
+      "category": "Food",
+      "total": 50.00
+    },
+    {
+      "category": "Transfer",
+      "total": 50.00
     }
   ]
 }
 ```
 
-#### Validações
+### Validações
 
 - A data inicial não pode ser posterior à data final.
 - Se uma data for informada, a outra também será obrigatória.
 - Períodos inválidos retornam HTTP 400.
-- Credenciais ausentes ou inválidas retornam HTTP 401.
-- Sem despesas, retorna total zero e lista vazia.
 
-#### Testes
+### Testes
 
-Foram implementados quatro testes unitários com JUnit e Mockito:
-
-- Agrupamento de despesas por mês.
-- Exclusão de depósitos e transações rejeitadas.
-- Mudança de mês e ano considerando o fuso horário.
-- Consulta sem despesas.
-
-Os testes automatizados do MS2 foram executados
-com sucesso: 69 testes, nenhuma falha.
-
-O endpoint também foi validado com requisições HTTP,
-incluindo consultas com e sem datas, erro 400 e
-autenticação obrigatória com retorno 401.
-
-### Exportação de transações em CSV
-
-O MS2 permite exportar as transações financeiras do
-usuário autenticado para um arquivo CSV.
-
-#### Endpoint
-
-GET /transactions/export/csv
-
-Requer autenticação HTTP Basic.
-
-É possível informar um período:
-
-GET /transactions/export/csv?startDate=2026-11-01&endDate=2026-11-30
-
-Sem informar datas, o relatório inclui todas as
-transações disponíveis do usuário autenticado.
-
-#### Conteúdo do relatório
-
-O arquivo contém as seguintes colunas:
-
-- Data
-- Tipo
-- Categoria
-- Descrição
-- Valor (BRL)
-- Status
-- Motivo da rejeição
-
-#### Regras
-
-- Inclui depósitos, saques, compras e transferências.
-- Inclui transações aprovadas e rejeitadas.
-- Retorna somente transações do usuário autenticado.
-- Utiliza o fuso horário America/Sao_Paulo.
-- Utiliza ponto e vírgula como separador.
-- Utiliza UTF-8 com BOM para compatibilidade com Excel.
-- Trata aspas, separadores e quebras de linha nos textos.
-- Sem transações, retorna apenas o cabeçalho do CSV.
-
-#### Validações
-
-- Data inicial posterior à final retorna HTTP 400.
-- Credenciais ausentes ou inválidas retornam HTTP 401.
-- Exportação bem-sucedida retorna HTTP 200.
-
-#### Testes
-
-Foram implementados quatro testes unitários com
-JUnit e Mockito, cobrindo:
-
-- Exportação de transações aprovadas.
-- Exportação de transações rejeitadas.
-- Tratamento de caracteres especiais.
-- Exportação sem transações.
-
-A suíte automatizada do MS2 foi executada com sucesso.
+Foram realizados testes unitários de agrupamento por categoria e exclusão de transações não elegíveis.
 
 O endpoint também foi validado no Postman.
-O download e a abertura do arquivo no Excel foram testados.
 
-### Atualização de saldo no saque
+---
 
-Quando um saque é aprovado, o MS2 desconta o valor
-do saldo da conta no MockAPI.
+## 19. Resumo de despesas por dia
 
-Regras:
-- Saques aprovados descontam o saldo.
-- Saques rejeitados não alteram o saldo.
-- Falhas na validação impedem o salvamento.
-- Falhas no salvamento não movimentam o saldo.
+Permite consultar as despesas do usuário autenticado, agrupadas por dia.
 
-### Testes de consistência
+### Endpoint
 
-Foram adicionados testes unitários com JUnit e Mockito
-e um teste de integração com banco H2 em memória.
-
-O teste de integração verifica o rollback da gravação
-quando o MockAPI apresenta uma falha.
-
-Limitação:
-O PostgreSQL e o MockAPI são sistemas independentes.
-O rollback do banco não desfaz alterações já realizadas
-no MockAPI. Uma solução de compensação ou reconciliação
-seria necessária para garantir consistência completa.
-
-
-### Transferência entre contas (MS2)
-
-A transferência permite enviar um valor de uma conta para outra.
-
-Quando a transferência é aprovada:
-- A transação é registrada no banco de dados.
-- O valor é descontado da conta de origem no MockAPI.
-- O mesmo valor é adicionado à conta de destino.
-
-Quando a transferência é rejeitada:
-- A transação é registrada como REJECTED.
-- Os saldos das contas não são alterados.
-
-#### Tratamento de falhas
-
-Se o crédito na conta de destino falhar:
-- O sistema tenta devolver o valor à conta de origem.
-- O erro original é preservado.
-- O @Transactional permite reverter a gravação no PostgreSQL.
-
-Se a devolução também falhar, os dois erros são preservados
-para facilitar a investigação.
-
-#### Testes
-
-Foram implementados testes unitários com JUnit e Mockito
-e teste de integração utilizando H2.
-
-Os testes verificam:
-- Transferências aprovadas e rejeitadas.
-- Atualização dos saldos de origem e destino.
-- Tentativa de devolução em caso de falha.
-- Rollback do registro no banco de dados.
-- Preservação dos erros de crédito e devolução.
-
-#### Limitação conhecida
-
-O PostgreSQL e o MockAPI são sistemas independentes.
-
-O @Transactional não desfaz alterações feitas no MockAPI.
-A compensação também pode falhar.
-
-Portanto, a implementação não garante atomicidade entre as
-duas contas. Em um ambiente de produção, seriam necessários
-mecanismos adicionais de controle, reconciliação e recuperação.
-
-### Compra (Purchase) — MS2
-
-A funcionalidade de compra permite registrar despesas
-e descontar o valor do saldo do usuário.
-
-Regras:
-- Compras aprovadas descontam o valor do saldo no MockAPI.
-- Compras rejeitadas não alteram o saldo.
-- Falhas ao salvar a transação impedem a atualização do saldo.
-- Falhas na atualização do saldo propagam um erro.
-
-#### Testes
-
-Foram implementados testes unitários com JUnit e Mockito
-e um teste de integração utilizando H2.
-
-Os testes verificam:
-- Compra aprovada com desconto no saldo.
-- Compra rejeitada por limite excedido.
-- Falha no salvamento da transação.
-- Falha na comunicação com o MockAPI.
-- Rollback do registro no banco de dados.
-
-#### Limitação conhecida
-
-O @Transactional permite reverter alterações no banco
-quando ocorre uma exceção, mas não desfaz alterações
-já realizadas no MockAPI.
-
-Por isso, ainda existe risco de inconsistência entre
-o registro da compra e o saldo externo.
-
-### Resumo de despesas por dia
-
-O MS2 permite consultar as despesas do usuário autenticado,
-agrupadas por dia.
-
-#### Endpoint
-
+```http
 GET /transactions/expenses/daily
+```
 
 Requer autenticação HTTP Basic.
 
@@ -568,20 +749,23 @@ Sem informar datas, a consulta considera o mês atual.
 
 Também é possível informar um período:
 
+```http
 GET /transactions/expenses/daily?startDate=2026-11-01&endDate=2026-11-30
+```
 
-#### Regras
+### Regras
 
-- Considera somente transações APPROVED.
-- Inclui saques (WITHDRAWAL).
-- Inclui transferências enviadas (TRANSFER).
-- Inclui compras (PURCHASE).
+- Considera somente transações `APPROVED`.
+- Inclui saques (`WITHDRAWAL`).
+- Inclui transferências enviadas (`TRANSFER`).
+- Inclui compras (`PURCHASE`).
 - Exclui depósitos e transações rejeitadas.
-- Agrupa os valores por dia, usando o fuso America/Sao_Paulo.
-- Retorna somente as despesas do usuário autenticado.
+- Retorna somente despesas do usuário autenticado.
+- Agrupa os valores por dia.
+- Utiliza o fuso horário `America/Sao_Paulo`.
 - Apresenta o total geral e os totais diários.
 
-#### Exemplo de resposta
+### Exemplo de resposta
 
 ```json
 {
@@ -605,15 +789,15 @@ GET /transactions/expenses/daily?startDate=2026-11-01&endDate=2026-11-30
 }
 ```
 
-#### Validações
+### Validações
 
 - A data inicial não pode ser posterior à data final.
 - Se uma data for informada, a outra também será obrigatória.
 - Períodos inválidos retornam HTTP 400.
-- Requisições sem autenticação retornam HTTP 401.
-- Sem despesas no período, retorna total zero e lista vazia.
+- Credenciais ausentes ou inválidas retornam HTTP 401.
+- Sem despesas, retorna total zero e lista vazia.
 
-#### Testes
+### Testes
 
 Foram implementados quatro testes unitários com JUnit e Mockito:
 
@@ -622,81 +806,387 @@ Foram implementados quatro testes unitários com JUnit e Mockito:
 - Conversão de datas para o fuso de São Paulo.
 - Retorno de total zero quando não existem despesas.
 
-Os 69 testes automatizados do MS2 passaram com sucesso.
+O endpoint também foi validado no Postman.
+
+---
+
+## 20. Resumo de despesas por mês
+
+Permite consultar as despesas do usuário autenticado, agrupadas por mês e ano.
+
+### Endpoint
+
+```http
+GET /transactions/expenses/monthly
+```
+
+Requer autenticação HTTP Basic.
+
+Sem informar datas, a consulta considera o mês atual.
+
+Também é possível informar um período:
+
+```http
+GET /transactions/expenses/monthly?startDate=2026-11-01&endDate=2026-11-30
+```
+
+### Regras
+
+- Considera somente transações `APPROVED`.
+- Inclui saques (`WITHDRAWAL`).
+- Inclui transferências enviadas (`TRANSFER`).
+- Inclui compras (`PURCHASE`).
+- Exclui depósitos e transações rejeitadas.
+- Retorna somente despesas do usuário autenticado.
+- Agrupa os valores por mês e ano.
+- Utiliza o fuso horário `America/Sao_Paulo`.
+- Ordena os meses cronologicamente.
+
+### Exemplo de resposta
+
+```json
+{
+  "startDate": "2026-11-01",
+  "endDate": "2026-11-30",
+  "totalAmount": 610.00,
+  "months": [
+    {
+      "month": "2026-11",
+      "amount": 610.00
+    }
+  ]
+}
+```
+
+### Validações
+
+- A data inicial não pode ser posterior à data final.
+- Se uma data for informada, a outra também será obrigatória.
+- Períodos inválidos retornam HTTP 400.
+- Credenciais ausentes ou inválidas retornam HTTP 401.
+- Sem despesas, retorna total zero e lista vazia.
+
+### Testes
+
+Foram implementados quatro testes unitários com JUnit e Mockito:
+
+- Agrupamento de despesas por mês.
+- Exclusão de depósitos e transações rejeitadas.
+- Mudança de mês e ano considerando o fuso horário.
+- Consulta sem despesas.
+
+O endpoint também foi validado com requisições HTTP, incluindo consultas com e sem datas, erro 400 e autenticação obrigatória.
+
+---
+
+## 21. Exportação de transações em CSV
+
+Permite exportar as transações financeiras do usuário autenticado para um arquivo CSV.
+
+### Endpoint
+
+```http
+GET /transactions/export/csv
+```
+
+Requer autenticação HTTP Basic.
+
+Também é possível informar um período:
+
+```http
+GET /transactions/export/csv?startDate=2026-11-01&endDate=2026-11-30
+```
+
+Sem informar datas, o relatório inclui todas as transações disponíveis do usuário autenticado.
+
+### Conteúdo do arquivo
+
+O CSV contém as seguintes colunas:
+
+- Data
+- Tipo
+- Categoria
+- Descrição
+- Valor (BRL)
+- Status
+- Motivo da rejeição
+
+### Regras
+
+- Inclui depósitos, saques, compras e transferências.
+- Inclui transações aprovadas e rejeitadas.
+- Retorna somente transações do usuário autenticado.
+- Utiliza o fuso horário `America/Sao_Paulo`.
+- Utiliza ponto e vírgula (`;`) como separador.
+- Utiliza vírgula como separador decimal.
+- Utiliza UTF-8 com BOM para compatibilidade com Excel.
+- Trata aspas, separadores e quebras de linha.
+- Aplica proteção contra interpretação de conteúdo como fórmula em planilhas.
+- Sem transações, retorna apenas o cabeçalho do CSV.
+
+### Validações
+
+- Data inicial posterior à data final retorna HTTP 400.
+- Credenciais ausentes ou inválidas retornam HTTP 401.
+- Exportação bem-sucedida retorna HTTP 200.
+
+### Testes
+
+Foram implementados quatro testes unitários com JUnit e Mockito, cobrindo:
+
+- Exportação de transações aprovadas.
+- Exportação de transações rejeitadas.
+- Tratamento de caracteres especiais.
+- Exportação sem transações.
 
 O endpoint também foi validado no Postman.
 
-## Cobertura de testes — JaCoCo (MS2)
+O download e a abertura do arquivo no Excel foram testados.
 
-O MS2 utiliza JUnit, Mockito e JaCoCo para executar
-os testes automatizados e medir a cobertura do código.
+---
 
-### Gerar o relatório
+# Testes Automatizados e Qualidade
 
-Na pasta `ms-transacoes`, execute:
+## 22. Testes do MS2
 
-```powershell
-.\mvnw.cmd clean verify
-```
+O MS2 utiliza testes automatizados para verificar as principais regras de negócio e o comportamento das funcionalidades.
 
-O comando compila o projeto, executa os testes e
-gera o relatório de cobertura.
+### Tecnologias
 
-### Consultar o relatório
-
-O relatório HTML fica disponível em:
-
-`ms-transacoes/target/site/jacoco/index.html`
-
-O JaCoCo também gera um arquivo CSV em:
-
-`ms-transacoes/target/site/jacoco/jacoco.csv`
-
-### Resultados da cobertura
-
-Na medição realizada em 09/11/2026, os 11 serviços
-de negócio analisados apresentaram:
-
-- 194 linhas cobertas.
-- 11 linhas não cobertas.
-- 205 linhas no total.
-- Cobertura conjunta de linhas: 94,6%.
-
-Destaques:
-
-| Serviço | Cobertura de linhas |
-| --- | ---: |
-| AccountValidator | 96% |
-| TransactionValidationService | 100% |
-| ExchangeConversionService | 85,7% |
-| TransferService | 100% |
-| WithdrawalService | 100% |
-| PurchaseService | 100% |
-| ExpenseSummaryService | 84,8% |
-
-Os resultados consideram os serviços de negócio
-presentes na branch `feature/ms2-jacoco-coverage`.
-
-A cobertura apresentada não representa a cobertura
-global do MS2. Controllers, DTOs, configurações e
-adapters também aparecem no relatório geral.
+- JUnit
+- Mockito
+- H2 para testes de integração
+- JaCoCo para cobertura de código
 
 ### Cenários testados
 
-Os testes automatizados verificam:
+Os testes verificam:
 
 - Saldo suficiente e insuficiente.
 - Limite por transação.
 - Limite diário.
 - Aprovação e rejeição de operações.
-- Cálculo dos gastos diários.
+- Validação de depósitos.
+- Atualização do saldo em saques.
+- Transferência entre contas.
+- Compras aprovadas e rejeitadas.
+- Cálculo de despesas por categoria.
+- Cálculo de despesas por dia.
+- Cálculo de despesas por mês.
+- Exportação de transações em CSV.
 - Conversão de BRL para USD e EUR.
 - Tratamento de indisponibilidade da API de câmbio.
 - Autenticação válida e inválida.
 - Falhas de comunicação com o MS1.
+- Rollback em cenários de falha.
 
-Os testes utilizam mocks e simulações locais para
-evitar dependência de serviços externos reais.
+Os testes utilizam mocks e simulações locais quando necessário para reduzir a dependência de serviços externos reais.
 
-A cobertura é acompanhada como indicador de qualidade,
-sem exigir 100% das linhas do projeto.
+### Executar os testes
+
+Na pasta `ms-transacoes`, execute:
+
+```bash
+mvn test
+```
+
+### Resultado validado em 10/11/2026
+
+- **84 testes executados.**
+- **0 falhas.**
+- **0 erros.**
+- **0 testes ignorados.**
+- **BUILD SUCCESS.**
+
+---
+
+## 23. Cobertura de testes — JaCoCo
+
+O MS2 utiliza JaCoCo para medir a cobertura dos testes automatizados.
+
+### Gerar o relatório
+
+Na pasta `ms-transacoes`, execute:
+
+```bash
+mvn clean verify
+```
+
+O comando:
+
+1. Remove resultados anteriores da compilação.
+2. Compila a aplicação.
+3. Executa os testes automatizados.
+4. Gera o relatório de cobertura do JaCoCo.
+
+### Consultar o relatório
+
+Relatório HTML:
+
+```text
+ms-transacoes/target/site/jacoco/index.html
+```
+
+Relatório CSV:
+
+```text
+ms-transacoes/target/site/jacoco/jacoco.csv
+```
+
+Para abrir o relatório HTML no Windows PowerShell, a partir da pasta `ms-transacoes`:
+
+```powershell
+start .\target\site\jacoco\index.html
+```
+
+### Resultados da cobertura
+
+Na medição realizada em **10/11/2026**, após a integração dos resumos diário e mensal e da exportação CSV:
+
+| Indicador | Resultado |
+| --- | --- |
+| Testes automatizados | 84 |
+| Falhas | 0 |
+| Erros | 0 |
+| Classes analisadas | 62 |
+| Linhas cobertas | 551 |
+| Linhas não cobertas | 180 |
+| Total de linhas analisadas | 731 |
+| Cobertura global de linhas | 75,4% |
+| Cobertura de instruções | 73% |
+| Cobertura de desvios (branches) | 67% |
+
+### Cobertura dos serviços de transação
+
+O pacote `core.transacao.service` apresentou:
+
+| Indicador | Resultado |
+| --- | --- |
+| Classes analisadas | 11 |
+| Linhas cobertas | 253 |
+| Linhas não cobertas | 18 |
+| Total de linhas | 271 |
+| Cobertura de linhas | 93,4% |
+
+### Configuração das exclusões
+
+O JaCoCo foi configurado para excluir do relatório:
+
+- Classes de configuração.
+- DTOs.
+- Classe principal `Application`.
+
+Essas exclusões não removem classes da aplicação nem impedem sua execução.
+
+Elas apenas retiram essas classes do cálculo apresentado no relatório de cobertura.
+
+### Interpretação dos resultados
+
+A cobertura global de linhas do MS2 foi de **75,4%**.
+
+Já os serviços de transação apresentaram **93,4% de cobertura de linhas**.
+
+Esses indicadores representam conjuntos diferentes de classes.
+
+A cobertura dos serviços de transação não representa a cobertura global do MS2, pois o relatório geral também considera controllers, adapters e outros componentes.
+
+A cobertura é utilizada como indicador de qualidade, sem exigir 100% das linhas do projeto.
+
+---
+
+## 24. Limitações conhecidas
+
+O projeto utiliza serviços externos para simular funcionalidades financeiras.
+
+### MockAPI
+
+O PostgreSQL e o MockAPI são sistemas independentes.
+
+Transações com múltiplas atualizações podem apresentar inconsistências caso uma operação externa falhe após outra ter sido concluída.
+
+A aplicação utiliza tratamento de exceções, rollback no banco e tentativas de compensação nos cenários implementados.
+
+Entretanto, esses mecanismos não garantem atomicidade completa entre o banco de dados e o MockAPI.
+
+Em produção, seriam necessários mecanismos adicionais de reconciliação, monitoramento e recuperação.
+
+### BrasilAPI
+
+A integração depende da disponibilidade das cotações fornecidas pela API externa.
+
+Falhas de consulta não impedem a consulta dos dados originais da transação.
+
+A conversão é apresentada como indisponível quando não é possível obter uma cotação válida.
+
+O tratamento da data atual e de datas futuras está identificado como um ajuste necessário antes da demonstração.
+
+---
+
+## 25. Segurança e boas práticas
+
+O projeto utiliza as seguintes práticas:
+
+- Autenticação HTTP Basic.
+- Senhas armazenadas com BCrypt no MS1.
+- Validação de credenciais pelo MS1.
+- Associação das transações ao usuário autenticado.
+- Validação dos dados recebidos pelos endpoints.
+- Tratamento de erros HTTP.
+- Variáveis de ambiente para configurações sensíveis.
+- Arquivo `.env` fora do controle de versão.
+- Testes automatizados com JUnit e Mockito.
+- Testes de integração para cenários selecionados.
+- Medição de cobertura com JaCoCo.
+- Separação das responsabilidades por microsserviço.
+- Arquitetura hexagonal.
+- Uso de DTOs para entrada e saída de dados.
+
+---
+
+## 26. Validações realizadas
+
+Durante o desenvolvimento, foram realizadas verificações utilizando:
+
+- IntelliJ IDEA.
+- Maven.
+- Docker Compose.
+- PostgreSQL.
+- Postman.
+- Swagger UI do MS1.
+- JUnit.
+- Mockito.
+- JaCoCo.
+- H2.
+- MockAPI.
+- BrasilAPI.
+
+Entre os cenários validados estão:
+
+- Cadastro e autenticação de usuários.
+- Importação de usuários por CSV.
+- Depósitos.
+- Saques.
+- Transferências.
+- Compras.
+- Consultas financeiras.
+- Resumos de despesas.
+- Exportação de transações.
+- Tratamento de erros.
+- Execução dos testes automatizados.
+- Geração de relatório de cobertura.
+
+---
+
+## 27. Considerações finais
+
+A API Gestão Financeira demonstra a construção de uma aplicação backend utilizando microsserviços em Java e Spring Boot.
+
+O projeto contempla gerenciamento de usuários, autenticação, operações financeiras, persistência, integrações externas, tratamento de erros e testes automatizados.
+
+A separação entre MS1 e MS2 permite organizar melhor as responsabilidades da aplicação.
+
+O uso de arquitetura hexagonal contribui para separar as regras de negócio dos detalhes de infraestrutura.
+
+Os testes automatizados e o JaCoCo auxiliam na validação das funcionalidades e no acompanhamento da qualidade do código.
+
+O projeto também documenta limitações relacionadas às integrações externas, especialmente em operações que envolvem o PostgreSQL, o MockAPI e a BrasilAPI.
