@@ -9,6 +9,7 @@ import com.beca.transacoes.core.transacao.port.input.DepositUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/transactions")
+@Tag(name = "Deposits")
 public class DepositController {
 
     private final DepositUseCase depositUseCase;
@@ -29,14 +31,26 @@ public class DepositController {
     }
 
     @Operation(
-            summary = "Registrar depósito",
-            description = "Registra um depósito para o usuário autenticado."
+            summary = "Create deposit",
+            description = "Creates a deposit for the authenticated user."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Depósito registrado com sucesso"),
-            @ApiResponse(responseCode = "400", description = "Dados inválidos"),
-            @ApiResponse(responseCode = "401", description = "Usuário não autenticado"),
-            @ApiResponse(responseCode = "503", description = "Serviço de autenticação indisponível")
+            @ApiResponse(
+                    responseCode = "201",
+                    description = "Deposit created successfully"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid request data"
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "User not authenticated"
+            ),
+            @ApiResponse(
+                    responseCode = "503",
+                    description = "Authentication service unavailable"
+            )
     })
     @PostMapping
     public ResponseEntity<DepositResponseDTO> deposit(
