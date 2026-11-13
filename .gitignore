@@ -39,3 +39,7 @@ replay_pid*
 .DS_Store
 Trumbs.db
 
+**/zscaler.cer
+**/Dockerfile.local
+/docker-compose.override.yml
+
