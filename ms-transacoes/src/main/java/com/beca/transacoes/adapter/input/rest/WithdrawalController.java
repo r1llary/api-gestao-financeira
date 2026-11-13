@@ -8,6 +8,7 @@ import com.beca.transacoes.core.transacao.port.input.WithdrawalUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -21,6 +22,7 @@ import java.math.BigDecimal;
 
 @RestController
 @RequestMapping("/transactions")
+@Tag(name = "Withdrawals")
 public class WithdrawalController {
 
     private final WithdrawalUseCase withdrawalService;
@@ -30,15 +32,28 @@ public class WithdrawalController {
     }
 
     @Operation(
-            summary = "Registrar saque",
-            description = "Registra um saque para o usuário autenticado. "
-                    + "A operação pode ser aprovada ou rejeitada conforme o saldo e os limites."
+            summary = "Create withdrawal",
+            description = "Creates a withdrawal for the authenticated user. "
+                    + "The transaction may be approved or rejected based on "
+                    + "the available balance and transaction limits."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Saque registrado com status APPROVED ou REJECTED"),
-            @ApiResponse(responseCode = "400", description = "Dados inválidos"),
-            @ApiResponse(responseCode = "401", description = "Usuário não autenticado"),
-            @ApiResponse(responseCode = "503", description = "Serviço de autenticação indisponível")
+            @ApiResponse(
+                    responseCode = "201",
+                    description = "Withdrawal created with APPROVED or REJECTED status"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid request data"
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "User not authenticated"
+            ),
+            @ApiResponse(
+                    responseCode = "503",
+                    description = "Authentication service unavailable"
+            )
     })
     @PostMapping("/withdrawals")
     public ResponseEntity<WithdrawalResponse> withdraw(

@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -23,6 +24,7 @@ import java.math.BigDecimal;
 
 @RestController
 @RequestMapping("/transactions")
+@Tag(name = "Transfers")
 public class TransferController {
 
     private final TransferUseCase transferUseCase;
@@ -32,16 +34,29 @@ public class TransferController {
     }
 
     @Operation(
-            summary = "Registrar transferência",
-            description = "Transfere um valor para outro usuário. "
-                    + "A operação pode ser aprovada ou rejeitada "
-                    + "conforme o saldo, os limites e o destinatário."
+            summary = "Create transfer",
+            description = "Transfers an amount to another user. "
+                    + "The transaction may be approved or rejected "
+                    + "based on the available balance, transaction limits, "
+                    + "and destination user."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Transferência registrada com status APPROVED ou REJECTED"),
-            @ApiResponse(responseCode = "400", description = "Dados inválidos"),
-            @ApiResponse(responseCode = "401", description = "Usuário não autenticado"),
-            @ApiResponse(responseCode = "503", description = "Serviço de autenticação indisponível")
+            @ApiResponse(
+                    responseCode = "201",
+                    description = "Transfer created with APPROVED or REJECTED status"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid request data"
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "User not authenticated"
+            ),
+            @ApiResponse(
+                    responseCode = "503",
+                    description = "Authentication service unavailable"
+            )
     })
     @PostMapping("/transfers")
     public ResponseEntity<TransferResponse> transfer(

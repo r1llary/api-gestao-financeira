@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +25,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/transactions")
+@Tag(name = "Transaction Queries")
 public class GetTransactionController {
 
     private final GetTransactionUseCase useCase;
@@ -41,21 +43,36 @@ public class GetTransactionController {
     }
 
     @Operation(
-            summary = "Consultar transação por ID",
-            description = "Consulta uma transação do usuário autenticado. "
-                    + "Retorna os dados da transação e a conversão "
-                    + "do valor em dólar e euro, quando disponível."
+            summary = "Get transaction by ID",
+            description = "Retrieves a transaction belonging to the authenticated user. "
+                    + "Returns transaction details and currency conversions "
+                    + "to US dollars and euros, when available."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Transação encontrada"),
-            @ApiResponse(responseCode = "401", description = "Usuário não autenticado"),
-            @ApiResponse(responseCode = "403", description = "Acesso não permitido"),
-            @ApiResponse(responseCode = "404", description = "Transação não encontrada"),
-            @ApiResponse(responseCode = "503", description = "Serviço de autenticação indisponível")
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Transaction found"
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "User not authenticated"
+            ),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Access denied"
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Transaction not found"
+            ),
+            @ApiResponse(
+                    responseCode = "503",
+                    description = "Authentication service unavailable"
+            )
     })
     @GetMapping("/{id}")
     public TransactionConversionResponse getById(
-            @Parameter(description = "Identificador da transação")
+            @Parameter(description = "Transaction ID")
             @PathVariable Long id,
             @Parameter(hidden = true)
             @AuthenticationPrincipal AuthenticatedUser user) {
@@ -92,36 +109,48 @@ public class GetTransactionController {
     }
 
     @Operation(
-            summary = "Listar transações",
-            description = "Lista as transações do usuário autenticado. "
-                    + "Permite filtrar por data inicial, data final e tipo."
+            summary = "List transactions",
+            description = "Lists transactions belonging to the authenticated user. "
+                    + "Supports filtering by start date, end date, and transaction type."
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Transações consultadas com sucesso"),
-            @ApiResponse(responseCode = "400", description = "Período ou filtro inválido"),
-            @ApiResponse(responseCode = "401", description = "Usuário não autenticado"),
-            @ApiResponse(responseCode = "503", description = "Serviço de autenticação indisponível")
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Transactions retrieved successfully"
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid date range or filter"
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "User not authenticated"
+            ),
+            @ApiResponse(
+                    responseCode = "503",
+                    description = "Authentication service unavailable"
+            )
     })
     @GetMapping
     public List<TransactionResponse> list(
             @Parameter(hidden = true)
             @AuthenticationPrincipal AuthenticatedUser user,
 
-            @Parameter(description = "Data inicial no formato AAAA-MM-DD")
+            @Parameter(description = "Start date in YYYY-MM-DD format")
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
             LocalDate startDate,
 
-            @Parameter(description = "Data final no formato AAAA-MM-DD")
+            @Parameter(description = "End date in YYYY-MM-DD format")
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
             LocalDate endDate,
 
-            @Parameter(description = "Tipo da transação")
+            @Parameter(description = "Transaction type")
             @RequestParam(required = false)
             TransactionType type) {
 
-        // Busca as transacoes do usuario
+        // Retrieves the user's transactions
         List<Transaction> transactions = listUseCase.list(
                 user.id(),
                 startDate,
@@ -129,10 +158,10 @@ public class GetTransactionController {
                 type
         );
 
-        // Cria uma lista de DTOs
+        // Creates a list of response DTOs
         List<TransactionResponse> responses = new ArrayList<>();
 
-        // Converte cada transacao em um DTO
+        // Converts each transaction into a response DTO
         for (Transaction transaction : transactions) {
 
             TransactionResponse response = new TransactionResponse(
